@@ -1,0 +1,23 @@
+{
+  "name": "service-downloader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "out/serviceDownloadProvider.js",
+  "typings": "out/serviceDownloadProbider",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "tsc -p ./src"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^9.4.6",
+    "typescript": "^2.7.2"
+  },
+  "dependencies": {
+    "decompress": "^4.2.0",
+    "http-proxy-agent": "^2.0.0",
+    "https-proxy-agent": "^2.1.1",
+    "tmp": "^0.0.33"
+  }
+}

@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Runtime } from './platform';
 import ServiceDownloadProvider from './serviceDownloadProvider';
-import { IConfig } from './interfaces';
+import { IConfig, ILogger } from './interfaces';
 
 
 /*
@@ -17,10 +17,9 @@ import { IConfig } from './interfaces';
 */
 export default class ServerProvider {
 
-    constructor(private _downloadProvider: ServiceDownloadProvider,
-                private _config: IConfig,
-                private _extensionConfigSectionName: string) {
-    }
+    private _downloadProvider = new ServiceDownloadProvider(this.config, this.logger);
+
+    constructor(private config: IConfig, private logger: ILogger) {}
 
     /**
      * Public get method for downloadProvider
@@ -43,8 +42,8 @@ export default class ServerProvider {
                 // Otherwise, search the specified folder.
                 let candidate: string;
     
-                if (executableFiles === undefined && this._config !== undefined) {
-                    executableFiles = this._config.executableFiles;
+                if (executableFiles === undefined && this.config !== undefined) {
+                    executableFiles = this.config.executableFiles;
                 }
                 if (executableFiles !== undefined) {
                     executableFiles.forEach(element => {

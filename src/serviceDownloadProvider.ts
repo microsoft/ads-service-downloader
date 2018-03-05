@@ -83,7 +83,7 @@ export default class ServiceDownloadProvider {
 	 * Returns SQL tools service installed folder root.
 	 */
 	public getInstallDirectoryRoot(platform: Runtime): string {
-		let installDirFromConfig = this._config.installDirectoy;
+		let installDirFromConfig = this._config.installDirectory;
 		if (!installDirFromConfig || installDirFromConfig === '') {
 			let rootFolderName: string = '.sqlops';
 			if (platform === Runtime.Windows_64 || platform === Runtime.Windows_86) {

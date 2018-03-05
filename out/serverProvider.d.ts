@@ -5,11 +5,14 @@ export default class ServerProvider {
     private config;
     private logger;
     private _downloadProvider;
+    private _runtime;
+    readonly runtime: Promise<Runtime>;
     constructor(config: IConfig, logger: ILogger);
     /**
      * Public get method for downloadProvider
      */
     readonly downloadProvider: ServiceDownloadProvider;
+    private findRuntime();
     /**
      * Given a file path, returns the path to the SQL Tools service file.
      */
@@ -17,13 +20,13 @@ export default class ServerProvider {
     /**
      * Download the service if doesn't exist and returns the file path.
      */
-    getOrDownloadServer(runtime: Runtime): Promise<string>;
+    getOrDownloadServer(): Promise<string>;
     /**
      * Returns the path of the installed service
      */
-    getServerPath(runtime: Runtime): Promise<string>;
+    getServerPath(): Promise<string>;
     /**
      * Downloads the service and returns the path of the installed service
      */
-    downloadServerFiles(runtime: Runtime): Promise<string>;
+    downloadServerFiles(): Promise<string>;
 }

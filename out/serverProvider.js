@@ -6,6 +6,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const fs = require("fs");
+const platform_1 = require("./platform");
 const serviceDownloadProvider_1 = require("./serviceDownloadProvider");
 /*
 * Service Provider class finds the SQL tools service executable file or downloads it if doesn't exist.
@@ -16,11 +17,25 @@ class ServerProvider {
         this.logger = logger;
         this._downloadProvider = new serviceDownloadProvider_1.default(this.config, this.logger);
     }
+    get runtime() {
+        if (!this._runtime) {
+            return this.findRuntime().then(r => {
+                this._runtime = r;
+                return r;
+            });
+        }
+        return Promise.resolve(this._runtime);
+    }
     /**
      * Public get method for downloadProvider
      */
     get downloadProvider() {
         return this._downloadProvider;
+    }
+    findRuntime() {
+        return platform_1.PlatformInformation.getCurrent().then(p => {
+            return p.runtimeId;
+        });
     }
     /**
      * Given a file path, returns the path to the SQL Tools service file.
@@ -53,12 +68,12 @@ class ServerProvider {
     /**
      * Download the service if doesn't exist and returns the file path.
      */
-    getOrDownloadServer(runtime) {
+    getOrDownloadServer() {
         // Attempt to find launch file path first from options, and then from the default install location.
         // If SQL tools service can't be found, download it.
-        return this.getServerPath(runtime).then(result => {
+        return this.getServerPath().then(result => {
             if (result === undefined) {
-                return this.downloadServerFiles(runtime).then(downloadResult => {
+                return this.downloadServerFiles().then(downloadResult => {
                     return downloadResult;
                 });
             }
@@ -70,17 +85,21 @@ class ServerProvider {
     /**
      * Returns the path of the installed service
      */
-    getServerPath(runtime) {
-        const installDirectory = this._downloadProvider.getInstallDirectory(runtime);
-        return this.findServerPath(installDirectory);
+    getServerPath() {
+        return this.runtime.then(r => {
+            const installDirectory = this._downloadProvider.getInstallDirectory(r);
+            return this.findServerPath(installDirectory);
+        });
     }
     /**
      * Downloads the service and returns the path of the installed service
      */
-    downloadServerFiles(runtime) {
-        const installDirectory = this._downloadProvider.getInstallDirectory(runtime);
-        return this._downloadProvider.installService(runtime).then(_ => {
-            return this.findServerPath(installDirectory);
+    downloadServerFiles() {
+        return this.runtime.then(r => {
+            const installDirectory = this._downloadProvider.getInstallDirectory(r);
+            return this._downloadProvider.installService(r).then(_ => {
+                return this.findServerPath(installDirectory);
+            });
         });
     }
 }

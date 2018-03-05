@@ -15,4 +15,5 @@ export interface IConfig {
     downloadUrl: string;
     proxy: string;
     strictSSL: boolean;
+    executableFiles: Array<string>;
 }

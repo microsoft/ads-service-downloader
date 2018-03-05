@@ -9,7 +9,9 @@ export interface IPackage {
     tmpFile: tmp.SynchronousResult;
 }
 export interface IConfig {
-    downloadFileNames: JSON;
+    downloadFileNames: {
+        [platform: string]: string;
+    };
     version: string;
     installDirectory: string;
     downloadUrl: string;

@@ -13,9 +13,8 @@ const httpClient_1 = require("./httpClient");
 * Service Download Provider class which handles downloading the service client
 */
 class ServiceDownloadProvider {
-    constructor(_config, _fromBuild, _logger) {
+    constructor(_config, _logger) {
         this._config = _config;
-        this._fromBuild = _fromBuild;
         this._logger = _logger;
         this.httpClient = new httpClient_1.default();
         // Ensure our temp files get cleaned up in case of error.

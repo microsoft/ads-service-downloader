@@ -6,14 +6,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const fs = require("fs");
+const serviceDownloadProvider_1 = require("./serviceDownloadProvider");
 /*
 * Service Provider class finds the SQL tools service executable file or downloads it if doesn't exist.
 */
 class ServerProvider {
-    constructor(_downloadProvider, _config, _extensionConfigSectionName) {
-        this._downloadProvider = _downloadProvider;
-        this._config = _config;
-        this._extensionConfigSectionName = _extensionConfigSectionName;
+    constructor(config, logger) {
+        this.config = config;
+        this.logger = logger;
+        this._downloadProvider = new serviceDownloadProvider_1.default(this.config, this.logger);
     }
     /**
      * Public get method for downloadProvider
@@ -33,8 +34,8 @@ class ServerProvider {
                 }
                 // Otherwise, search the specified folder.
                 let candidate;
-                if (executableFiles === undefined && this._config !== undefined) {
-                    executableFiles = this._config.executableFiles;
+                if (executableFiles === undefined && this.config !== undefined) {
+                    executableFiles = this.config.executableFiles;
                 }
                 if (executableFiles !== undefined) {
                     executableFiles.forEach(element => {

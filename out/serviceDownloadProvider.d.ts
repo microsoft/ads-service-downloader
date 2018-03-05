@@ -3,10 +3,9 @@ import { IConfig } from './interfaces';
 import { ILogger } from './interfaces';
 export default class ServiceDownloadProvider {
     private _config;
-    private _fromBuild;
     private _logger;
     private httpClient;
-    constructor(_config: IConfig, _fromBuild: boolean, _logger?: ILogger);
+    constructor(_config: IConfig, _logger: ILogger);
     /**
      * Returns the download url for given platform
      */

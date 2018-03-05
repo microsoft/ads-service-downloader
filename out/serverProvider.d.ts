@@ -1,11 +1,11 @@
 import { Runtime } from './platform';
 import ServiceDownloadProvider from './serviceDownloadProvider';
-import { IConfig } from './interfaces';
+import { IConfig, ILogger } from './interfaces';
 export default class ServerProvider {
+    private config;
+    private logger;
     private _downloadProvider;
-    private _config;
-    private _extensionConfigSectionName;
-    constructor(_downloadProvider: ServiceDownloadProvider, _config: IConfig, _extensionConfigSectionName: string);
+    constructor(config: IConfig, logger: ILogger);
     /**
      * Public get method for downloadProvider
      */

@@ -22,8 +22,8 @@ export default class ServiceDownloadProvider {
     private httpClient = new HttpClient();
 
 	constructor(private _config: IConfig,
-		private _fromBuild: boolean,
-		private _logger?: ILogger) {
+		private _logger: ILogger
+	) {
 		// Ensure our temp files get cleaned up in case of error.
 		tmp.setGracefulCleanup();
 	}

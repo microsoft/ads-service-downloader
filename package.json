@@ -2,8 +2,8 @@
   "name": "service-downloader",
   "version": "1.0.0",
   "description": "",
-  "main": "out/serviceDownloadProvider.js",
-  "typings": "out/serviceDownloadProbider",
+  "main": "out/serverProvider.js",
+  "typings": "out/serverProvider",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile": "tsc -p ./src"

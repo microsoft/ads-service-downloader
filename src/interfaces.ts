@@ -12,7 +12,7 @@ export interface IPackage {
 }
 
 export interface IConfig {
-    downloadFileNames: JSON;
+    downloadFileNames: { [platform: string]: string };
     version: string;
     installDirectory: string;
     downloadUrl: string;

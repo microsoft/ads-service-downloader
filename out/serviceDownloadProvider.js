@@ -68,7 +68,7 @@ class ServiceDownloadProvider {
      * Returns SQL tools service installed folder root.
      */
     getInstallDirectoryRoot(platform) {
-        let installDirFromConfig = this._config.installDirectoy;
+        let installDirFromConfig = this._config.installDirectory;
         if (!installDirFromConfig || installDirFromConfig === '') {
             let rootFolderName = '.sqlops';
             if (platform === platform_1.Runtime.Windows_64 || platform === platform_1.Runtime.Windows_86) {

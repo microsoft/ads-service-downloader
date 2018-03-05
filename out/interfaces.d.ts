@@ -11,7 +11,7 @@ export interface IPackage {
 export interface IConfig {
     downloadFileNames: JSON;
     version: string;
-    installDirectoy: string;
+    installDirectory: string;
     downloadUrl: string;
     proxy: string;
     strictSSL: boolean;

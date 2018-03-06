@@ -6,6 +6,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const decompress = require("decompress");
+const mkdirp = require("mkdirp");
 const platform_1 = require("./platform");
 const tmp = require("tmp");
 const httpClient_1 = require("./httpClient");
@@ -47,7 +48,7 @@ class ServiceDownloadProvider {
         basePath = basePath.replace('{#version#}', versionFromConfig);
         basePath = basePath.replace('{#platform#}', platform_1.getRuntimeDisplayName(platform));
         if (!fs.existsSync(basePath)) {
-            fs.mkdirSync(basePath);
+            mkdirp.sync(basePath);
         }
         return basePath;
     }

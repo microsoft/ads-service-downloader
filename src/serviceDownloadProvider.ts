@@ -7,6 +7,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as decompress from 'decompress';
+import * as mkdirp from 'mkdirp';
 
 import { Runtime, getRuntimeDisplayName } from './platform'
 import { IConfig, IPackage } from './interfaces';
@@ -59,7 +60,7 @@ export default class ServiceDownloadProvider {
 		basePath = basePath.replace('{#version#}', versionFromConfig);
 		basePath = basePath.replace('{#platform#}', getRuntimeDisplayName(platform));
 		if (!fs.existsSync(basePath)) {
-			fs.mkdirSync(basePath);
+			mkdirp.sync(basePath);
 		}
 
 		return basePath;

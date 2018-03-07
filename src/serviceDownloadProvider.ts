@@ -23,10 +23,16 @@ export class ServiceDownloadProvider {
     private httpClient = new HttpClient();
 
 	constructor(private _config: IConfig,
-		private _logger: ILogger
+		private _logger?: ILogger
 	) {
 		// Ensure our temp files get cleaned up in case of error.
 		tmp.setGracefulCleanup();
+	}
+
+	private appendLine(m: string) {
+		if (this._logger) {
+			this._logger.appendLine(m);
+		}
 	}
 
 	/**
@@ -129,14 +135,14 @@ export class ServiceDownloadProvider {
 				this.httpClient.downloadFile(pkg.url, pkg, this._logger, proxy, strictSSL).then(_ => {
 
 					// this._logger.logDebug(`Downloaded to ${pkg.tmpFile.name}...`);
-					this._logger.appendLine(' Done!');
+					this.appendLine(' Done!');
 					this.install(pkg).then(result => {
 						resolve(true);
 					}).catch(installError => {
 						reject(installError);
 					});
 				}).catch(downloadError => {
-					this._logger.appendLine(`[ERROR] ${downloadError}`);
+					this.appendLine(`[ERROR] ${downloadError}`);
 					reject(downloadError);
 				});
 			});
@@ -156,7 +162,7 @@ export class ServiceDownloadProvider {
 	}
 
 	private install(pkg: IPackage): Promise<void> {
-		this._logger.appendLine('Installing ...');
+		this.appendLine('Installing ...');
 
 		return decompress(pkg.tmpFile.name, pkg.installPath);
 	}

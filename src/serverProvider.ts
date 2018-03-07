@@ -8,14 +8,14 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { Runtime, PlatformInformation } from './platform';
-import ServiceDownloadProvider from './serviceDownloadProvider';
+import { ServiceDownloadProvider } from './serviceDownloadProvider';
 import { IConfig, ILogger } from './interfaces';
 
 
 /*
 * Service Provider class finds the SQL tools service executable file or downloads it if doesn't exist.
 */
-export default class ServerProvider {
+export class ServerProvider {
 
     private _downloadProvider = new ServiceDownloadProvider(this.config, this.logger);
     private _runtime: Runtime;

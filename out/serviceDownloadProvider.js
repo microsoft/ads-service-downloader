@@ -21,6 +21,11 @@ class ServiceDownloadProvider {
         // Ensure our temp files get cleaned up in case of error.
         tmp.setGracefulCleanup();
     }
+    appendLine(m) {
+        if (this._logger) {
+            this._logger.appendLine(m);
+        }
+    }
     /**
      * Returns the download url for given platform
      */
@@ -107,14 +112,14 @@ class ServiceDownloadProvider {
                 pkg.tmpFile = tmpResult;
                 this.httpClient.downloadFile(pkg.url, pkg, this._logger, proxy, strictSSL).then(_ => {
                     // this._logger.logDebug(`Downloaded to ${pkg.tmpFile.name}...`);
-                    this._logger.appendLine(' Done!');
+                    this.appendLine(' Done!');
                     this.install(pkg).then(result => {
                         resolve(true);
                     }).catch(installError => {
                         reject(installError);
                     });
                 }).catch(downloadError => {
-                    this._logger.appendLine(`[ERROR] ${downloadError}`);
+                    this.appendLine(`[ERROR] ${downloadError}`);
                     reject(downloadError);
                 });
             });
@@ -131,7 +136,7 @@ class ServiceDownloadProvider {
         });
     }
     install(pkg) {
-        this._logger.appendLine('Installing ...');
+        this.appendLine('Installing ...');
         return decompress(pkg.tmpFile.name, pkg.installPath);
     }
 }

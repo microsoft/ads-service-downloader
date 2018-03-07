@@ -11,7 +11,7 @@ import { getProxyAgent } from './proxy';
 /*
  * Http client class to handle downloading files using http or https urls
  */
-export default class HttpClient {
+export class HttpClient {
 
    /*
     * Downloads a file and stores the result in the temp file inside the package object

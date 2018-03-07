@@ -13,12 +13,12 @@ import { Runtime, getRuntimeDisplayName } from './platform'
 import { IConfig, IPackage } from './interfaces';
 import { ILogger } from './interfaces';
 import * as tmp from 'tmp';
-import HttpClient from './httpClient';
+import { HttpClient } from './httpClient';
 
 /*
 * Service Download Provider class which handles downloading the service client
 */
-export default class ServiceDownloadProvider {
+export class ServiceDownloadProvider {
 
     private httpClient = new HttpClient();
 

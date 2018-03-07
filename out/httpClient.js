@@ -105,5 +105,5 @@ class HttpClient {
         });
     }
 }
-exports.default = HttpClient;
+exports.HttpClient = HttpClient;
 //# sourceMappingURL=httpClient.js.map

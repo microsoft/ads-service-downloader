@@ -17,7 +17,7 @@ class ServiceDownloadProvider {
     constructor(_config, _logger) {
         this._config = _config;
         this._logger = _logger;
-        this.httpClient = new httpClient_1.default();
+        this.httpClient = new httpClient_1.HttpClient();
         // Ensure our temp files get cleaned up in case of error.
         tmp.setGracefulCleanup();
     }
@@ -135,5 +135,5 @@ class ServiceDownloadProvider {
         return decompress(pkg.tmpFile.name, pkg.installPath);
     }
 }
-exports.default = ServiceDownloadProvider;
+exports.ServiceDownloadProvider = ServiceDownloadProvider;
 //# sourceMappingURL=serviceDownloadProvider.js.map

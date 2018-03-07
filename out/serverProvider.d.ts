@@ -1,7 +1,7 @@
 import { Runtime } from './platform';
-import ServiceDownloadProvider from './serviceDownloadProvider';
+import { ServiceDownloadProvider } from './serviceDownloadProvider';
 import { IConfig, ILogger } from './interfaces';
-export default class ServerProvider {
+export declare class ServerProvider {
     private config;
     private logger;
     private _downloadProvider;

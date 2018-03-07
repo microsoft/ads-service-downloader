@@ -15,7 +15,7 @@ class ServerProvider {
     constructor(config, logger) {
         this.config = config;
         this.logger = logger;
-        this._downloadProvider = new serviceDownloadProvider_1.default(this.config, this.logger);
+        this._downloadProvider = new serviceDownloadProvider_1.ServiceDownloadProvider(this.config, this.logger);
     }
     get runtime() {
         if (!this._runtime) {
@@ -103,5 +103,5 @@ class ServerProvider {
         });
     }
 }
-exports.default = ServerProvider;
+exports.ServerProvider = ServerProvider;
 //# sourceMappingURL=serverProvider.js.map

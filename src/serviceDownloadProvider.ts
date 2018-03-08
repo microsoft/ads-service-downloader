@@ -23,16 +23,10 @@ export class ServiceDownloadProvider {
     private httpClient = new HttpClient();
 
 	constructor(private _config: IConfig,
-		private _logger?: ILogger
+		private _logger: ILogger
 	) {
 		// Ensure our temp files get cleaned up in case of error.
 		tmp.setGracefulCleanup();
-	}
-
-	private appendLine(m: string) {
-		if (this._logger) {
-			this._logger.appendLine(m);
-		}
 	}
 
 	/**
@@ -55,7 +49,6 @@ export class ServiceDownloadProvider {
 
 		return fileName;
 	}
-
 
 	/**
 	 * Returns SQL tools service installed folder.
@@ -135,14 +128,14 @@ export class ServiceDownloadProvider {
 				this.httpClient.downloadFile(pkg.url, pkg, this._logger, proxy, strictSSL).then(_ => {
 
 					// this._logger.logDebug(`Downloaded to ${pkg.tmpFile.name}...`);
-					this.appendLine(' Done!');
+					this._logger.appendLine(' Done!');
 					this.install(pkg).then(result => {
 						resolve(true);
 					}).catch(installError => {
 						reject(installError);
 					});
 				}).catch(downloadError => {
-					this.appendLine(`[ERROR] ${downloadError}`);
+					this._logger.appendLine(`[ERROR] ${downloadError}`);
 					reject(downloadError);
 				});
 			});
@@ -162,7 +155,7 @@ export class ServiceDownloadProvider {
 	}
 
 	private install(pkg: IPackage): Promise<void> {
-		this.appendLine('Installing ...');
+		this._logger.appendLine('Installing ...');
 
 		return decompress(pkg.tmpFile.name, pkg.installPath);
 	}

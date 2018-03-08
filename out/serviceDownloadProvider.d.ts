@@ -5,8 +5,7 @@ export declare class ServiceDownloadProvider {
     private _config;
     private _logger;
     private httpClient;
-    constructor(_config: IConfig, _logger?: ILogger);
-    private appendLine(m);
+    constructor(_config: IConfig, _logger: ILogger);
     /**
      * Returns the download url for given platform
      */

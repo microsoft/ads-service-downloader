@@ -8,11 +8,11 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as decompress from 'decompress';
 import * as mkdirp from 'mkdirp';
+import { EventEmitter2 as EventEmitter } from 'eventemitter2';
+import * as tmp from 'tmp';
 
 import { Runtime, getRuntimeDisplayName } from './platform'
-import { IConfig, IPackage } from './interfaces';
-import { ILogger } from './interfaces';
-import * as tmp from 'tmp';
+import { IConfig, IPackage, Events } from './interfaces';
 import { HttpClient } from './httpClient';
 
 /*
@@ -20,13 +20,17 @@ import { HttpClient } from './httpClient';
 */
 export class ServiceDownloadProvider {
 
-    private httpClient = new HttpClient();
+	private httpClient = new HttpClient();
+	public readonly eventEmitter = new EventEmitter({ wildcard: true });
 
-	constructor(private _config: IConfig,
-		private _logger: ILogger
+	constructor(
+		private _config: IConfig
 	) {
 		// Ensure our temp files get cleaned up in case of error.
 		tmp.setGracefulCleanup();
+		this.httpClient.eventEmitter.onAny((e, ...args) => {
+			this.eventEmitter.emit(e, args);
+		});
 	}
 
 	/**
@@ -113,10 +117,8 @@ export class ServiceDownloadProvider {
 			const fileName = this.getDownloadFileName(platform);
 			const installDirectory = this.getInstallDirectory(platform);
 
-			// this._logger.appendLine(`${this._extensionConstants.serviceInstallingTo} ${installDirectory}.`);
 			const urlString = this.getGetDownloadUrl(fileName);
 
-			// this._logger.appendLine(`${Constants.serviceDownloading} ${urlString}`);
 			let pkg: IPackage = {
 				installPath: installDirectory,
 				url: urlString,
@@ -125,17 +127,13 @@ export class ServiceDownloadProvider {
 			this.createTempFile(pkg).then(tmpResult => {
 				pkg.tmpFile = tmpResult;
 
-				this.httpClient.downloadFile(pkg.url, pkg, this._logger, proxy, strictSSL).then(_ => {
-
-					// this._logger.logDebug(`Downloaded to ${pkg.tmpFile.name}...`);
-					this._logger.appendLine(' Done!');
+				this.httpClient.downloadFile(pkg.url, pkg, proxy, strictSSL).then(_ => {
 					this.install(pkg).then(result => {
 						resolve(true);
 					}).catch(installError => {
 						reject(installError);
 					});
 				}).catch(downloadError => {
-					this._logger.appendLine(`[ERROR] ${downloadError}`);
 					reject(downloadError);
 				});
 			});
@@ -155,11 +153,9 @@ export class ServiceDownloadProvider {
 	}
 
 	private install(pkg: IPackage): Promise<void> {
-		this._logger.appendLine('Installing ...');
-
-		return decompress(pkg.tmpFile.name, pkg.installPath);
+		this.eventEmitter.emit(Events.INSTALL_START);
+		return decompress(pkg.tmpFile.name, pkg.installPath).then(() => {
+			this.eventEmitter.emit(Events.INSTALL_END);
+		});
 	}
 }
-
-
-

@@ -7,17 +7,21 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
+import { EventEmitter2 as EventEmitter } from 'eventemitter2';
+
 import { Runtime, PlatformInformation } from './platform';
 import { ServiceDownloadProvider } from './serviceDownloadProvider';
-import { IConfig, ILogger } from './interfaces';
-
+import { IConfig } from './interfaces';
 
 /*
 * Service Provider class finds the SQL tools service executable file or downloads it if doesn't exist.
 */
 export class ServerProvider {
 
-    private _downloadProvider = new ServiceDownloadProvider(this.config, this.logger);
+	public readonly eventEmitter = new EventEmitter({ wildcard: true });
+
+    private _downloadProvider = new ServiceDownloadProvider(this.config);
+
     private _runtime: Runtime;
     public get runtime(): Promise<Runtime> {
         if (!this._runtime) {
@@ -29,7 +33,13 @@ export class ServerProvider {
         return Promise.resolve(this._runtime);
     }
 
-    constructor(private config: IConfig, private logger: ILogger) {}
+    constructor(
+        private config: IConfig
+    ) {
+        this._downloadProvider.eventEmitter.onAny((e, ...args) => {
+            this.eventEmitter.emit(e, args);
+        });
+    }
 
     /**
      * Public get method for downloadProvider

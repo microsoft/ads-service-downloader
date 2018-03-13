@@ -29,7 +29,7 @@ export class ServiceDownloadProvider {
 		// Ensure our temp files get cleaned up in case of error.
 		tmp.setGracefulCleanup();
 		this.httpClient.eventEmitter.onAny((e, ...args) => {
-			this.eventEmitter.emit(e, args);
+			this.eventEmitter.emit(e, ...args);
 		});
 	}
 

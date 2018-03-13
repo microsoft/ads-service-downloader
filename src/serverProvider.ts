@@ -37,7 +37,7 @@ export class ServerProvider {
         private config: IConfig
     ) {
         this._downloadProvider.eventEmitter.onAny((e, ...args) => {
-            this.eventEmitter.emit(e, args);
+            this.eventEmitter.emit(e, ...args);
         });
     }
 

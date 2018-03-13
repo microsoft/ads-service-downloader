@@ -153,7 +153,7 @@ export class ServiceDownloadProvider {
 	}
 
 	private install(pkg: IPackage): Promise<void> {
-		this.eventEmitter.emit(Events.INSTALL_START);
+		this.eventEmitter.emit(Events.INSTALL_START, pkg.installPath);
 		return decompress(pkg.tmpFile.name, pkg.installPath).then(() => {
 			this.eventEmitter.emit(Events.INSTALL_END);
 		});

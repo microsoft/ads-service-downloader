@@ -108,12 +108,13 @@ export class HttpClient {
                 downloadedBytes: 0,
                 downloadPercentage: 0
             };
-            this.eventEmitter.emit(Events.DOWNLOAD_START, progress.packageSize);
+            this.eventEmitter.emit(Events.DOWNLOAD_START, pkg.url, progress.packageSize);
             response.on('data', data => {
                 this.handleDataReceivedEvent(progress, data);
             });
             let tmpFile = fs.createWriteStream(undefined, { fd: pkg.tmpFile.fd });
             response.on('end', () => {
+                this.eventEmitter.emit(Events.DOWNLOAD_END);
                 resolve();
             });
 

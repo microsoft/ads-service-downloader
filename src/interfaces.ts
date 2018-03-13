@@ -23,11 +23,7 @@ export interface IConfig {
 
 export const enum Events {
     /**
-     * Making a request to the generated request, data will be the url
-     */
-    REQUESTING_URL = 'requesting_url',
-    /**
-     * Download start, data will be the size of the download in bytes, and downloading url
+     * Download start, downloading url and data will be the size of the download in bytes
      */
     DOWNLOAD_START = 'download_start',
     /**

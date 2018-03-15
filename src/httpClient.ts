@@ -1,11 +1,15 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the Source EULA. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 
 import * as https from 'https';
 import * as http from 'http';
 import * as fs from 'fs';
 import { parse as parseUrl, Url } from 'url';
+import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 
-import { IPackage } from './interfaces';
-import  { ILogger } from './interfaces';
+import { IPackage, Events } from './interfaces';
 import { getProxyAgent } from './proxy';
 
 /*
@@ -13,10 +17,12 @@ import { getProxyAgent } from './proxy';
  */
 export class HttpClient {
 
+	public readonly eventEmitter = new EventEmitter({ wildcard: true });
+
    /*
     * Downloads a file and stores the result in the temp file inside the package object
     */
-    public downloadFile(urlString: string, pkg: IPackage, logger: ILogger, proxy?: string, strictSSL?: boolean): Promise<void> {
+    public downloadFile(urlString: string, pkg: IPackage, proxy?: string, strictSSL?: boolean): Promise<void> {
         const url = parseUrl(urlString);
         let options = this.getHttpClientOptions(url, proxy, strictSSL);
         let clientRequest = url.protocol === 'http:' ? http.request : https.request;
@@ -29,17 +35,16 @@ export class HttpClient {
             let request = clientRequest(options, response => {
                 if (response.statusCode === 301 || response.statusCode === 302) {
                     // Redirect - download from new location
-                    return resolve(this.downloadFile(response.headers.location, pkg, logger, proxy, strictSSL));
+                    return resolve(this.downloadFile(response.headers.location, pkg, proxy, strictSSL));
                 }
 
                 if (response.statusCode !== 200) {
                     // Download failed - print error message
-                    logger.appendLine(`failed (error code '${response.statusCode}')`);
                     return reject(new Error(response.statusCode.toString()));
                 }
 
                 // If status code is 200
-                this.handleSuccessfulResponse(pkg, response, logger).then(_ => {
+                this.handleSuccessfulResponse(pkg, response).then(_ => {
                     resolve();
                 }).catch(err => {
                     reject(err);
@@ -82,37 +87,34 @@ export class HttpClient {
    /*
     * Calculate the download percentage and stores in the progress object
     */
-    public handleDataReceivedEvent(progress: IDownloadProgress, data: any, logger: ILogger): void {
+    public handleDataReceivedEvent(progress: IDownloadProgress, data: any): void {
         progress.downloadedBytes += data.length;
 
         // Update status bar item with percentage
         if (progress.packageSize > 0) {
             let newPercentage = Math.ceil(100 * (progress.downloadedBytes / progress.packageSize));
-
-            // Update dots after package name in output console
-            let newDots = Math.ceil(progress.downloadPercentage / 5);
-            if (newDots > progress.dots) {
-                logger.append('.'.repeat(newDots - progress.dots));
-                progress.dots = newDots;
+            if (newPercentage !== progress.downloadPercentage) {
+                this.eventEmitter.emit(Events.DOWNLOAD_PROGRESS, newPercentage);
+                progress.downloadPercentage = newPercentage;
             }
         }
         return;
     }
 
-    private handleSuccessfulResponse(pkg: IPackage, response: http.IncomingMessage, logger: ILogger): Promise<void> {
+    private handleSuccessfulResponse(pkg: IPackage, response: http.IncomingMessage): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             let progress: IDownloadProgress = {
                 packageSize: parseInt(response.headers['content-length'], 10),
-                dots: 0,
                 downloadedBytes: 0,
                 downloadPercentage: 0
             };
-            logger.append(`(${Math.ceil(progress.packageSize / 1024)} KB) `);
+            this.eventEmitter.emit(Events.DOWNLOAD_START, pkg.url, progress.packageSize);
             response.on('data', data => {
-                this.handleDataReceivedEvent(progress, data, logger);
+                this.handleDataReceivedEvent(progress, data);
             });
             let tmpFile = fs.createWriteStream(undefined, { fd: pkg.tmpFile.fd });
             response.on('end', () => {
+                this.eventEmitter.emit(Events.DOWNLOAD_END);
                 resolve();
             });
 
@@ -133,5 +135,4 @@ export interface IDownloadProgress {
     packageSize: number;
     downloadedBytes: number;
     downloadPercentage: number;
-    dots: number;
 }

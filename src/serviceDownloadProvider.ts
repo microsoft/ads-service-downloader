@@ -8,25 +8,30 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as decompress from 'decompress';
 import * as mkdirp from 'mkdirp';
+import { EventEmitter2 as EventEmitter } from 'eventemitter2';
+import * as tmp from 'tmp';
 
 import { Runtime, getRuntimeDisplayName } from './platform'
-import { IConfig, IPackage } from './interfaces';
-import { ILogger } from './interfaces';
-import * as tmp from 'tmp';
+import { IConfig, IPackage, Events } from './interfaces';
 import { HttpClient } from './httpClient';
+import { PlatformNotSupportedError, DistributionNotSupportedError } from './errors';
 
 /*
 * Service Download Provider class which handles downloading the service client
 */
 export class ServiceDownloadProvider {
 
-    private httpClient = new HttpClient();
+	private httpClient = new HttpClient();
+	public readonly eventEmitter = new EventEmitter({ wildcard: true });
 
-	constructor(private _config: IConfig,
-		private _logger: ILogger
+	constructor(
+		private _config: IConfig
 	) {
 		// Ensure our temp files get cleaned up in case of error.
 		tmp.setGracefulCleanup();
+		this.httpClient.eventEmitter.onAny((e, ...args) => {
+			this.eventEmitter.emit(e, ...args);
+		});
 	}
 
 	/**
@@ -34,16 +39,13 @@ export class ServiceDownloadProvider {
 	 */
 	public getDownloadFileName(platform: Runtime): string {
 		let fileNamesJson = this._config.downloadFileNames;
-		console.info('Platform: ', platform.toString());
-
-		let fileName = fileNamesJson[platform.toString()];
-		console.info('Filename: ', fileName);
+		let fileName = fileNamesJson[platform];
 
 		if (fileName === undefined) {
 			if (process.platform === 'linux') {
-				throw new Error('Unsupported linux distribution');
+				throw new DistributionNotSupportedError('Unsupported linux distribution', process.platform, platform.toString());
 			} else {
-				throw new Error(`Unsupported platform: ${process.platform}`);
+				throw new PlatformNotSupportedError(`Unsupported platform: ${process.platform}`, process.platform);
 			}
 		}
 
@@ -54,7 +56,7 @@ export class ServiceDownloadProvider {
 	 * Returns SQL tools service installed folder.
 	 */
 	public getInstallDirectory(platform: Runtime): string {
-		let basePath = this.getInstallDirectoryRoot(platform);
+		let basePath = this._config.installDirectory;
 		let versionFromConfig = this._config.version;
 		basePath = basePath.replace('{#version#}', versionFromConfig);
 		basePath = basePath.replace('{#platform#}', getRuntimeDisplayName(platform));
@@ -79,21 +81,6 @@ export class ServiceDownloadProvider {
 		}
 	}
 
-	/**
-	 * Returns SQL tools service installed folder root.
-	 */
-	public getInstallDirectoryRoot(platform: Runtime): string {
-		let installDirFromConfig = this._config.installDirectory;
-		if (!installDirFromConfig || installDirFromConfig === '') {
-			let rootFolderName: string = '.sqlops';
-			if (platform === Runtime.Windows_64 || platform === Runtime.Windows_86) {
-				rootFolderName = 'sqlops';
-			}
-			// installDirFromConfig = path.join(this.getLocalUserFolderPath(platform), `/${rootFolderName}/${this._extensionConstants.installFolderName}/{#version#}/{#platform#}`);
-		}
-		return installDirFromConfig;
-	}
-
 	private getGetDownloadUrl(fileName: string): string {
 		let baseDownloadUrl = this._config.downloadUrl;
 		let version = this._config.version;
@@ -113,10 +100,8 @@ export class ServiceDownloadProvider {
 			const fileName = this.getDownloadFileName(platform);
 			const installDirectory = this.getInstallDirectory(platform);
 
-			// this._logger.appendLine(`${this._extensionConstants.serviceInstallingTo} ${installDirectory}.`);
 			const urlString = this.getGetDownloadUrl(fileName);
 
-			// this._logger.appendLine(`${Constants.serviceDownloading} ${urlString}`);
 			let pkg: IPackage = {
 				installPath: installDirectory,
 				url: urlString,
@@ -125,17 +110,13 @@ export class ServiceDownloadProvider {
 			this.createTempFile(pkg).then(tmpResult => {
 				pkg.tmpFile = tmpResult;
 
-				this.httpClient.downloadFile(pkg.url, pkg, this._logger, proxy, strictSSL).then(_ => {
-
-					// this._logger.logDebug(`Downloaded to ${pkg.tmpFile.name}...`);
-					this._logger.appendLine(' Done!');
+				this.httpClient.downloadFile(pkg.url, pkg, proxy, strictSSL).then(_ => {
 					this.install(pkg).then(result => {
 						resolve(true);
 					}).catch(installError => {
 						reject(installError);
 					});
 				}).catch(downloadError => {
-					this._logger.appendLine(`[ERROR] ${downloadError}`);
 					reject(downloadError);
 				});
 			});
@@ -155,11 +136,9 @@ export class ServiceDownloadProvider {
 	}
 
 	private install(pkg: IPackage): Promise<void> {
-		this._logger.appendLine('Installing ...');
-
-		return decompress(pkg.tmpFile.name, pkg.installPath);
+		this.eventEmitter.emit(Events.INSTALL_START, pkg.installPath);
+		return decompress(pkg.tmpFile.name, pkg.installPath).then(() => {
+			this.eventEmitter.emit(Events.INSTALL_END);
+		});
 	}
 }
-
-
-

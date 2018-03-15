@@ -7,34 +7,37 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs = require("fs");
 const decompress = require("decompress");
 const mkdirp = require("mkdirp");
-const platform_1 = require("./platform");
+const eventemitter2_1 = require("eventemitter2");
 const tmp = require("tmp");
+const platform_1 = require("./platform");
 const httpClient_1 = require("./httpClient");
+const errors_1 = require("./errors");
 /*
 * Service Download Provider class which handles downloading the service client
 */
 class ServiceDownloadProvider {
-    constructor(_config, _logger) {
+    constructor(_config) {
         this._config = _config;
-        this._logger = _logger;
         this.httpClient = new httpClient_1.HttpClient();
+        this.eventEmitter = new eventemitter2_1.EventEmitter2({ wildcard: true });
         // Ensure our temp files get cleaned up in case of error.
         tmp.setGracefulCleanup();
+        this.httpClient.eventEmitter.onAny((e, ...args) => {
+            this.eventEmitter.emit(e, ...args);
+        });
     }
     /**
      * Returns the download url for given platform
      */
     getDownloadFileName(platform) {
         let fileNamesJson = this._config.downloadFileNames;
-        console.info('Platform: ', platform.toString());
-        let fileName = fileNamesJson[platform.toString()];
-        console.info('Filename: ', fileName);
+        let fileName = fileNamesJson[platform];
         if (fileName === undefined) {
             if (process.platform === 'linux') {
-                throw new Error('Unsupported linux distribution');
+                throw new errors_1.DistributionNotSupportedError('Unsupported linux distribution', process.platform, platform.toString());
             }
             else {
-                throw new Error(`Unsupported platform: ${process.platform}`);
+                throw new errors_1.PlatformNotSupportedError(`Unsupported platform: ${process.platform}`, process.platform);
             }
         }
         return fileName;
@@ -43,7 +46,7 @@ class ServiceDownloadProvider {
      * Returns SQL tools service installed folder.
      */
     getInstallDirectory(platform) {
-        let basePath = this.getInstallDirectoryRoot(platform);
+        let basePath = this._config.installDirectory;
         let versionFromConfig = this._config.version;
         basePath = basePath.replace('{#version#}', versionFromConfig);
         basePath = basePath.replace('{#platform#}', platform_1.getRuntimeDisplayName(platform));
@@ -65,20 +68,6 @@ class ServiceDownloadProvider {
             }
         }
     }
-    /**
-     * Returns SQL tools service installed folder root.
-     */
-    getInstallDirectoryRoot(platform) {
-        let installDirFromConfig = this._config.installDirectory;
-        if (!installDirFromConfig || installDirFromConfig === '') {
-            let rootFolderName = '.sqlops';
-            if (platform === platform_1.Runtime.Windows_64 || platform === platform_1.Runtime.Windows_86) {
-                rootFolderName = 'sqlops';
-            }
-            // installDirFromConfig = path.join(this.getLocalUserFolderPath(platform), `/${rootFolderName}/${this._extensionConstants.installFolderName}/{#version#}/{#platform#}`);
-        }
-        return installDirFromConfig;
-    }
     getGetDownloadUrl(fileName) {
         let baseDownloadUrl = this._config.downloadUrl;
         let version = this._config.version;
@@ -95,9 +84,7 @@ class ServiceDownloadProvider {
         return new Promise((resolve, reject) => {
             const fileName = this.getDownloadFileName(platform);
             const installDirectory = this.getInstallDirectory(platform);
-            // this._logger.appendLine(`${this._extensionConstants.serviceInstallingTo} ${installDirectory}.`);
             const urlString = this.getGetDownloadUrl(fileName);
-            // this._logger.appendLine(`${Constants.serviceDownloading} ${urlString}`);
             let pkg = {
                 installPath: installDirectory,
                 url: urlString,
@@ -105,16 +92,13 @@ class ServiceDownloadProvider {
             };
             this.createTempFile(pkg).then(tmpResult => {
                 pkg.tmpFile = tmpResult;
-                this.httpClient.downloadFile(pkg.url, pkg, this._logger, proxy, strictSSL).then(_ => {
-                    // this._logger.logDebug(`Downloaded to ${pkg.tmpFile.name}...`);
-                    this._logger.appendLine(' Done!');
+                this.httpClient.downloadFile(pkg.url, pkg, proxy, strictSSL).then(_ => {
                     this.install(pkg).then(result => {
                         resolve(true);
                     }).catch(installError => {
                         reject(installError);
                     });
                 }).catch(downloadError => {
-                    this._logger.appendLine(`[ERROR] ${downloadError}`);
                     reject(downloadError);
                 });
             });
@@ -131,8 +115,10 @@ class ServiceDownloadProvider {
         });
     }
     install(pkg) {
-        this._logger.appendLine('Installing ...');
-        return decompress(pkg.tmpFile.name, pkg.installPath);
+        this.eventEmitter.emit("install_start" /* INSTALL_START */, pkg.installPath);
+        return decompress(pkg.tmpFile.name, pkg.installPath).then(() => {
+            this.eventEmitter.emit("install_end" /* INSTALL_END */);
+        });
     }
 }
 exports.ServiceDownloadProvider = ServiceDownloadProvider;

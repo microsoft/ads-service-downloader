@@ -6,16 +6,20 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
 const fs = require("fs");
+const eventemitter2_1 = require("eventemitter2");
 const platform_1 = require("./platform");
 const serviceDownloadProvider_1 = require("./serviceDownloadProvider");
 /*
 * Service Provider class finds the SQL tools service executable file or downloads it if doesn't exist.
 */
 class ServerProvider {
-    constructor(config, logger) {
+    constructor(config) {
         this.config = config;
-        this.logger = logger;
-        this._downloadProvider = new serviceDownloadProvider_1.ServiceDownloadProvider(this.config, this.logger);
+        this.eventEmitter = new eventemitter2_1.EventEmitter2({ wildcard: true });
+        this._downloadProvider = new serviceDownloadProvider_1.ServiceDownloadProvider(this.config);
+        this._downloadProvider.eventEmitter.onAny((e, ...args) => {
+            this.eventEmitter.emit(e, ...args);
+        });
     }
     get runtime() {
         if (!this._runtime) {

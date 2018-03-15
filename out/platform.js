@@ -1,8 +1,13 @@
 "use strict";
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the Source EULA. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
 const os = require("os");
 const cp = require("child_process");
 const fs = require("fs");
+const errors_1 = require("./errors");
 const unknown = 'unknown';
 function getRuntimeIdLinux(distributionName, distributionVersion) {
     switch (distributionName) {
@@ -52,9 +57,9 @@ function getRuntimeIdLinux(distributionName, distributionVersion) {
             }
             break;
         default:
-            return Runtime.UnknownRuntime;
+            return Runtime.Unknown;
     }
-    return Runtime.UnknownVersion;
+    return Runtime.Unknown;
 }
 /**
  * Returns a supported .NET Core Runtime ID (RID) for the current platform. The list of Runtime IDs
@@ -68,13 +73,13 @@ function getRuntimeId(platform, architecture, distribution) {
                 case 'x86_64': return Runtime.Windows_64;
                 default:
             }
-            throw new Error(`Unsupported Windows architecture: ${architecture}`);
+            throw new errors_1.ArchitectureNotSupportedError(`Unsupported Windows architecture: ${architecture}`, platform, architecture);
         case 'darwin':
             if (architecture === 'x86_64') {
                 // Note: We return the El Capitan RID for Sierra
                 return Runtime.OSX;
             }
-            throw new Error(`Unsupported macOS architecture: ${architecture}`);
+            throw new errors_1.ArchitectureNotSupportedError(`Unsupported macOS architecture: ${architecture}`, platform, architecture);
         case 'linux':
             if (architecture === 'x86_64') {
                 // First try the distribution name
@@ -83,31 +88,30 @@ function getRuntimeId(platform, architecture, distribution) {
                 //
                 // NOTE: 'ID_LIKE' doesn't specify the version of the 'like' OS. So we will use the 'VERSION_ID' value. This will restrict
                 // how useful ID_LIKE will be since it requires the version numbers to match up, but it is the best we can do.
-                if (runtimeId === Runtime.UnknownRuntime && distribution.idLike && distribution.idLike.length > 0) {
+                if (runtimeId === Runtime.Unknown && distribution.idLike && distribution.idLike.length > 0) {
                     for (let id of distribution.idLike) {
                         runtimeId = getRuntimeIdLinux(id, distribution.version);
-                        if (runtimeId !== Runtime.UnknownRuntime) {
+                        if (runtimeId !== Runtime.Unknown) {
                             break;
                         }
                     }
                 }
-                if (runtimeId !== Runtime.UnknownRuntime && runtimeId !== Runtime.UnknownVersion) {
+                if (runtimeId !== Runtime.Unknown && runtimeId !== Runtime.Unknown) {
                     return runtimeId;
                 }
             }
             // If we got here, this is not a Linux distro or architecture that we currently support.
-            throw new Error(`Unsupported Linux distro: ${distribution.name}, ${distribution.version}, ${architecture}`);
+            throw new errors_1.DistributionNotSupportedError(`Unsupported Linux distro: ${distribution.name}, ${distribution.version}, ${architecture}`, platform, distribution.name);
         default:
             // If we got here, we've ended up with a platform we don't support  like 'freebsd' or 'sunos'.
             // Chances are, VS Code doesn't support these platforms either.
-            throw Error('Unsupported platform ' + platform);
+            throw new errors_1.PlatformNotSupportedError(undefined, platform);
     }
 }
 exports.getRuntimeId = getRuntimeId;
 var Runtime;
 (function (Runtime) {
-    Runtime[Runtime["UnknownRuntime"] = 'Unknown'] = "UnknownRuntime";
-    Runtime[Runtime["UnknownVersion"] = 'Unknown'] = "UnknownVersion";
+    Runtime[Runtime["Unknown"] = 'Unknown'] = "Unknown";
     Runtime[Runtime["Windows_86"] = 'Windows_86'] = "Windows_86";
     Runtime[Runtime["Windows_64"] = 'Windows_64'] = "Windows_64";
     Runtime[Runtime["OSX"] = 'OSX'] = "OSX";
@@ -177,7 +181,7 @@ class PlatformInformation {
         return this.platform === 'linux';
     }
     get isValidRuntime() {
-        return this.runtimeId !== undefined && this.runtimeId !== Runtime.UnknownRuntime && this.runtimeId !== Runtime.UnknownVersion;
+        return this.runtimeId !== undefined && this.runtimeId !== Runtime.Unknown && this.runtimeId !== Runtime.Unknown;
     }
     get runtimeDisplayName() {
         return getRuntimeDisplayName(this.runtimeId);
@@ -208,10 +212,6 @@ class PlatformInformation {
                 distributionPromise = Promise.resolve(undefined);
                 break;
             case 'darwin':
-                let osVersion = os.release();
-                if (parseFloat(osVersion) < 16.0) {
-                    return Promise.reject('The current version of macOS is not supported. Only macOS Sierra and above (>= 10.12) are supported.');
-                }
                 architecturePromise = PlatformInformation.getUnixArchitecture();
                 distributionPromise = Promise.resolve(undefined);
                 break;
@@ -220,7 +220,7 @@ class PlatformInformation {
                 distributionPromise = LinuxDistribution.getCurrent();
                 break;
             default:
-                return Promise.reject(`Unsupported platform: ${platform}`);
+                return Promise.reject(new errors_1.PlatformNotSupportedError(`Unsupported platform: ${platform}`, platform));
         }
         return Promise.all([architecturePromise, distributionPromise]).then(rt => {
             return new PlatformInformation(platform, rt[0], rt[1]);

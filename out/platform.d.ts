@@ -4,8 +4,7 @@
  */
 export declare function getRuntimeId(platform: string, architecture: string, distribution: LinuxDistribution): Runtime;
 export declare enum Runtime {
-    UnknownRuntime,
-    UnknownVersion,
+    Unknown,
     Windows_86,
     Windows_64,
     OSX,

@@ -1,13 +1,14 @@
+import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import { Runtime } from './platform';
 import { ServiceDownloadProvider } from './serviceDownloadProvider';
-import { IConfig, ILogger } from './interfaces';
+import { IConfig } from './interfaces';
 export declare class ServerProvider {
     private config;
-    private logger;
+    readonly eventEmitter: EventEmitter;
     private _downloadProvider;
     private _runtime;
     readonly runtime: Promise<Runtime>;
-    constructor(config: IConfig, logger: ILogger);
+    constructor(config: IConfig);
     /**
      * Public get method for downloadProvider
      */

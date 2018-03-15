@@ -1,11 +1,11 @@
+import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import { Runtime } from './platform';
 import { IConfig } from './interfaces';
-import { ILogger } from './interfaces';
 export declare class ServiceDownloadProvider {
     private _config;
-    private _logger;
     private httpClient;
-    constructor(_config: IConfig, _logger: ILogger);
+    readonly eventEmitter: EventEmitter;
+    constructor(_config: IConfig);
     /**
      * Returns the download url for given platform
      */
@@ -15,10 +15,6 @@ export declare class ServiceDownloadProvider {
      */
     getInstallDirectory(platform: Runtime): string;
     private getLocalUserFolderPath(platform);
-    /**
-     * Returns SQL tools service installed folder root.
-     */
-    getInstallDirectoryRoot(platform: Runtime): string;
     private getGetDownloadUrl(fileName);
     /**
      * Downloads the service and decompress it in the install folder.

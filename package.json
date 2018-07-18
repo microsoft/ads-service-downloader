@@ -1,6 +1,6 @@
 {
   "name": "service-downloader",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Download a file and decompress it. Designed for use with Sql Operations Studio",
   "main": "out/main.js",
   "typings": "out/main",

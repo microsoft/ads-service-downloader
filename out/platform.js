@@ -32,11 +32,8 @@ function getRuntimeIdLinux(distributionName, distributionVersion) {
             }
             break;
         case 'linuxmint':
-            if (distributionVersion.startsWith('18')) {
-                // Linux Mint 18 is binary compatible with Ubuntu 16.04
-                return Runtime.Ubuntu_16;
-            }
-            break;
+            // Current versions of Linux Mint are binary compatible with Ubuntu 16.04
+            return Runtime.Ubuntu_16;
         case 'centos':
         case 'ol':
             // Oracle Linux is binary compatible with CentOS
@@ -57,9 +54,10 @@ function getRuntimeIdLinux(distributionName, distributionVersion) {
             }
             break;
         default:
-            return Runtime.Unknown;
+            // Default to Ubuntu_16 to try to support other Linux distributions
+            return Runtime.Ubuntu_16;
     }
-    return Runtime.Unknown;
+    return Runtime.Ubuntu_16;
 }
 /**
  * Returns a supported .NET Core Runtime ID (RID) for the current platform. The list of Runtime IDs

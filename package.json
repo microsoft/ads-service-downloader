@@ -18,8 +18,8 @@
   "dependencies": {
     "decompress": "^4.2.0",
     "eventemitter2": "^5.0.1",
-    "http-proxy-agent": "^2.0.0",
-    "https-proxy-agent": "^2.1.1",
+    "http-proxy-agent": "^2.1.0",
+    "https-proxy-agent": "^2.2.1",
     "mkdirp": "^0.5.1",
     "tmp": "^0.0.33"
   },

@@ -123,14 +123,14 @@ export class ServiceDownloadProvider {
 		});
 	}
 
-	private createTempFile(pkg: IPackage): Promise<tmp.SynchronousResult> {
-		return new Promise<tmp.SynchronousResult>((resolve, reject) => {
+	private createTempFile(pkg: IPackage): Promise<tmp.SynchrounousResult> {
+		return new Promise<tmp.SynchrounousResult>((resolve, reject) => {
 			tmp.file({ prefix: 'package-' }, (err, path, fd, cleanupCallback) => {
 				if (err) {
 					return reject(new Error('Error from tmp.file'));
 				}
 
-				resolve(<tmp.SynchronousResult>{ name: path, fd: fd, removeCallback: cleanupCallback });
+				resolve(<tmp.SynchrounousResult>{ name: path, fd: fd, removeCallback: cleanupCallback });
 			});
 		});
 	}

@@ -7,13 +7,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "npm run compile",
-    "compile": "tsc -p ./src"
+	"compile": "tsc -p ./src",
+	"tslint": "tslint --project src/tsconfig.json --config tslint.json --rules-dir node_modules/tslint-microsoft-contrib"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^9.4.6",
-    "@types/tmp": "^0.0.33",
+	"@types/tmp": "^0.0.33",
+    "tslint": "^5.16.0",
+    "tslint-microsoft-contrib": "^6.0.0",
     "typescript": "^2.7.2"
   },
   "dependencies": {

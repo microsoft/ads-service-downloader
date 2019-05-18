@@ -44,7 +44,7 @@ export const enum Events {
      */
     DOWNLOAD_PROGRESS = 'download_progress',
     /**
-     * Download end 
+     * Download end
      */
     DOWNLOAD_END = 'download_end',
     /**

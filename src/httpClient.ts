@@ -17,7 +17,7 @@ import { getProxyAgent } from './proxy';
  */
 export class HttpClient {
 
-	public readonly eventEmitter = new EventEmitter({ wildcard: true });
+    public readonly eventEmitter = new EventEmitter({ wildcard: true });
 
    /*
     * Downloads a file and stores the result in the temp file inside the package object

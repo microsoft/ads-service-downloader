@@ -18,7 +18,7 @@ import { IConfig } from './interfaces';
 */
 export class ServerProvider {
 
-	public readonly eventEmitter = new EventEmitter({ wildcard: true });
+    public readonly eventEmitter = new EventEmitter({ wildcard: true });
 
     private _downloadProvider = new ServiceDownloadProvider(this.config);
 
@@ -64,10 +64,10 @@ export class ServerProvider {
                 if (stats.isFile()) {
                     resolve(filePath);
                 }
-    
+
                 // Otherwise, search the specified folder.
                 let candidate: string;
-    
+
                 if (executableFiles === undefined && this.config !== undefined) {
                     executableFiles = this.config.executableFiles;
                 }
@@ -80,8 +80,7 @@ export class ServerProvider {
                         }
                     });
                 }
-    
-    
+
                 resolve(candidate);
             });
         });

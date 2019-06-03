@@ -8,7 +8,7 @@ import * as tmp from 'tmp';
 export interface IPackage {
     url: string;
     installPath?: string;
-    tmpFile: tmp.SynchronousResult;
+    tmpFile: tmp.SynchrounousResult;
 }
 
 export interface IConfig {
@@ -44,7 +44,7 @@ export const enum Events {
      */
     DOWNLOAD_PROGRESS = 'download_progress',
     /**
-     * Download end 
+     * Download end
      */
     DOWNLOAD_END = 'download_end',
     /**

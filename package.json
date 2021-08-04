@@ -35,7 +35,7 @@
     "http-proxy-agent": "^2.1.0",
     "https-proxy-agent": "^2.2.3",
     "mkdirp": "^0.5.1",
-    "tar": "^6.0.1",
+    "tar": "^6.1.2",
     "tmp": "^0.0.33",
     "yauzl": "^2.10.0"
   },

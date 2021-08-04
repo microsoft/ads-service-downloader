@@ -1,0 +1,26 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*.*.*'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    env:
+      CHILD_CONCURRENCY: "1"
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install dependencies & compile
+      run: yarn --frozen-lockfile
+    - name: Create Package
+      run: npm pack
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v0.1.5
+      with:
+        files: ./microsoft-ads-service-downloader*.tgz

@@ -1,0 +1,12 @@
+trigger:
+- main
+
+jobs:
+
+# All tasks on Linux
+- job: build
+  displayName: Build all tasks (Linux)
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: build/azure-pipelines-build.yml

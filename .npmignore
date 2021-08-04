@@ -1,4 +1,7 @@
+build
 node_modules
 src
-yarn.lock
 .gitignore
+azure-pipelines.yml
+tslint.json
+yarn.lock

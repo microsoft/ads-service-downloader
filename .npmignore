@@ -1,7 +1,8 @@
 build
-node_modules
 src
 .gitignore
 azure-pipelines.yml
 tslint.json
 yarn.lock
+.github
+*.tgz

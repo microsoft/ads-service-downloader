@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/ads-service-downloader",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Download a file and decompress it. Designed for use with Azure Data Studio",
   "main": "out/main.js",
   "typings": "out/main",
@@ -35,7 +35,7 @@
     "http-proxy-agent": "^2.1.0",
     "https-proxy-agent": "^2.2.3",
     "mkdirp": "^0.5.1",
-    "tar": "^6.1.6",
+    "tar": "^6.1.11",
     "tmp": "^0.0.33",
     "yauzl": "^2.10.0"
   },

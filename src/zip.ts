@@ -5,15 +5,13 @@
 
 import { open as _openZip, Entry, ZipFile } from 'yauzl';
 import * as path from 'path';
-import * as _mkdirp from 'mkdirp';
+import * as mkdirp from 'mkdirp';
 import { Sequencer } from './async';
 import { Readable } from 'stream';
 import { WriteStream, createWriteStream } from 'fs';
-import { promisify } from 'util';
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import { Events } from './interfaces';
 
-const mkdirp = promisify(_mkdirp);
 
 export type ExtractErrorType = 'CorruptZip' | 'Incomplete';
 

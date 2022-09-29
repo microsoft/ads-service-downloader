@@ -11,7 +11,7 @@ import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import * as tmp from 'tmp';
 import * as path from 'path';
 
-import { Runtime, getRuntimeDisplayName } from './platform';
+import { Runtime, getRuntimeDisplayName, getFallbackRuntime } from './platform';
 import { IConfig, IPackage, Events, IRetryOptions } from './interfaces';
 import { HttpClient } from './httpClient';
 import { PlatformNotSupportedError, DistributionNotSupportedError } from './errors';
@@ -44,9 +44,14 @@ export class ServiceDownloadProvider {
      * Returns the download url for given platform
      */
     public getDownloadFileName(platform: Runtime): string {
-        let fileNamesJson = this._config.downloadFileNames;
+        const fileNamesJson = this._config.downloadFileNames;
         let fileName = fileNamesJson[platform];
 
+        // If the given runtime is not specified in the config, try the fallback runtime.
+        if (fileName === undefined) {
+            const fallback = getFallbackRuntime(platform);
+            fileName = fileNamesJson[platform];
+        }
         if (fileName === undefined) {
             if (process.platform === 'linux') {
                 throw new DistributionNotSupportedError('Unsupported linux distribution', process.platform, platform.toString());

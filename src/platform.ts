@@ -24,6 +24,9 @@ export enum Runtime {
     RHEL_7 = <any>'RHEL_7',
     Ubuntu_14 = <any>'Ubuntu_14',
     Ubuntu_16 = <any>'Ubuntu_16',
+    Ubuntu_18 = <any>'Ubuntu_18',
+    Ubuntu_20 = <any>'Ubuntu_20',
+    Ubuntu_22 = <any>'Ubuntu_22',
     Linux_64 = <any>'Linux_64',
     Linux_86 = <any>'Linux-86'
 }
@@ -111,6 +114,12 @@ function getRuntimeIdLinux(distributionName: string, distributionVersion: string
                 return Runtime.Ubuntu_14;
             } else if (distributionVersion.startsWith('16')) {
                 return Runtime.Ubuntu_16;
+            } else if (distributionVersion.startsWith('18')) {
+                return Runtime.Ubuntu_18;
+            } else if (distributionVersion.startsWith('20')) {
+                return Runtime.Ubuntu_20;
+            } else if (distributionVersion.startsWith('22')) {
+                return Runtime.Ubuntu_22;
             }
 
             break;
@@ -244,6 +253,22 @@ export function getRuntimeDisplayName(runtime: Runtime): string {
             return 'Linux';
         default:
             return 'Unknown';
+    }
+}
+
+/**
+ * Get the fallback runtime.
+ */
+export function getFallbackRuntime(runtime: Runtime): Runtime {
+    switch (runtime) {
+        case Runtime.Ubuntu_22:
+        case Runtime.Ubuntu_20:
+        case Runtime.Ubuntu_18:
+            return Runtime.Ubuntu_16;
+        case Runtime.OSX_ARM64:
+            return Runtime.OSX;
+        default:
+            return runtime;
     }
 }
 

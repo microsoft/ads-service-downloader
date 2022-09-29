@@ -50,7 +50,7 @@ export class ServiceDownloadProvider {
         // If the given runtime is not specified in the config, try the fallback runtime.
         if (fileName === undefined) {
             const fallback = getFallbackRuntime(platform);
-            fileName = fileNamesJson[platform];
+            fileName = fileNamesJson[fallback];
         }
         if (fileName === undefined) {
             if (process.platform === 'linux') {

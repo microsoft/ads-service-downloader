@@ -12,16 +12,16 @@ import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import { Runtime, PlatformInformation } from './platform';
 import { ServiceDownloadProvider } from './serviceDownloadProvider';
 import { IConfig } from './interfaces';
+import { ILogger, Logger } from './logger';
 
 /*
 * Service Provider class finds the SQL tools service executable file or downloads it if doesn't exist.
 */
 export class ServerProvider {
-
+    private logger: ILogger;
     public readonly eventEmitter = new EventEmitter({ wildcard: true });
 
     private _downloadProvider = new ServiceDownloadProvider(this.config);
-
     private _runtime: Runtime;
     public get runtime(): Promise<Runtime> {
         if (!this._runtime) {
@@ -39,6 +39,7 @@ export class ServerProvider {
         this._downloadProvider.eventEmitter.onAny((e, ...args) => {
             this.eventEmitter.emit(e, ...args);
         });
+        this.logger = new Logger(this.eventEmitter);
     }
 
     /**
@@ -49,7 +50,7 @@ export class ServerProvider {
     }
 
     private findRuntime(): Promise<Runtime> {
-        return PlatformInformation.getCurrent().then(p => {
+        return PlatformInformation.getCurrent(this.logger).then(p => {
             return p.runtimeId;
         });
     }
@@ -86,9 +87,9 @@ export class ServerProvider {
         });
     }
 
-   /**
-    * Download the service if doesn't exist and returns the file path.
-    */
+    /**
+     * Download the service if doesn't exist and returns the file path.
+     */
     public getOrDownloadServer(): Promise<string> {
         // Attempt to find launch file path first from options, and then from the default install location.
         // If SQL tools service can't be found, download it.
@@ -103,9 +104,9 @@ export class ServerProvider {
         });
     }
 
-   /**
-    * Returns the path of the installed service
-    */
+    /**
+     * Returns the path of the installed service
+     */
     public getServerPath(): Promise<string> {
         return this.runtime.then(r => {
             const installDirectory = this._downloadProvider.getInstallDirectory(r);
@@ -113,13 +114,13 @@ export class ServerProvider {
         });
     }
 
-   /**
-    * Downloads the service and returns the path of the installed service
-    */
+    /**
+     * Downloads the service and returns the path of the installed service
+     */
     public downloadServerFiles(): Promise<string> {
         return this.runtime.then(r => {
             const installDirectory = this._downloadProvider.getInstallDirectory(r);
-            return this._downloadProvider.installService(r).then( _ => {
+            return this._downloadProvider.installService(r).then(_ => {
                 return this.findServerPath(installDirectory);
             });
         });

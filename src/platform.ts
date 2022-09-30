@@ -7,25 +7,39 @@ import * as os from 'os';
 import * as cp from 'child_process';
 import * as fs from 'fs';
 import { PlatformNotSupportedError, ArchitectureNotSupportedError, DistributionNotSupportedError } from './errors';
+import { ILogger } from './logger';
 
 const unknown = 'unknown';
 
 export enum Runtime {
-    Unknown = <any>'Unknown',
-    Windows_86 = <any>'Windows_86',
-    Windows_64 = <any>'Windows_64',
-    OSX = <any>'OSX',
-    OSX_ARM64 = <any>'OSX_ARM64',
-    CentOS_7 = <any>'CentOS_7',
-    Debian_8 = <any>'Debian_8',
-    Fedora_23 = <any>'Fedora_23',
-    OpenSUSE_13_2 = <any>'OpenSUSE_13_2',
-    SLES_12_2 = <any>'SLES_12_2',
-    RHEL_7 = <any>'RHEL_7',
-    Ubuntu_14 = <any>'Ubuntu_14',
-    Ubuntu_16 = <any>'Ubuntu_16',
-    Linux_64 = <any>'Linux_64',
-    Linux_86 = <any>'Linux-86'
+    Unknown = 'Unknown',
+    // Windows
+    Windows_86 = 'Windows_86',
+    Windows_64 = 'Windows_64',
+    Windows = 'Windows',
+    // macOS
+    OSX = 'OSX',
+    OSX_ARM64 = 'OSX_ARM64',
+    // Linux distributions
+    CentOS = 'CentOS',
+    Debian = 'Debian',
+    ElementaryOS_0_3 = 'ElementaryOS_0_3',
+    ElementaryOS_0_4 = 'ElementaryOS_0_4',
+    ElementaryOS = 'ElementaryOS',
+    Fedora = 'Fedora',
+    GalliumOS = 'GalliumOS',
+    LinuxMint = 'LinuxMint',
+    OpenSUSE = 'OpenSUSE',
+    OracleLinux = 'OracleLinux',
+    RHEL = 'RHEL',
+    SLES = 'SLES',
+    Ubuntu_14 = 'Ubuntu_14',
+    Ubuntu_16 = 'Ubuntu_16',
+    Ubuntu_18 = 'Ubuntu_18',
+    Ubuntu_20 = 'Ubuntu_20',
+    Ubuntu_22 = 'Ubuntu_22',
+    Ubuntu = 'Ubuntu',
+    Linux = 'Linux'
 }
 
 /**
@@ -103,63 +117,61 @@ export class LinuxDistribution {
     }
 }
 
-function getRuntimeIdLinux(distributionName: string, distributionVersion: string): Runtime {
+function getRuntimeIdLinux(distributionName: string, distributionVersion: string, logger: ILogger): Runtime {
     switch (distributionName) {
         case 'ubuntu':
             if (distributionVersion.startsWith('14')) {
-                // This also works for Linux Mint
                 return Runtime.Ubuntu_14;
             } else if (distributionVersion.startsWith('16')) {
                 return Runtime.Ubuntu_16;
+            } else if (distributionVersion.startsWith('18')) {
+                return Runtime.Ubuntu_18;
+            } else if (distributionVersion.startsWith('20')) {
+                return Runtime.Ubuntu_20;
+            } else if (distributionVersion.startsWith('22')) {
+                return Runtime.Ubuntu_22;
+            } else {
+                logger.warn(`The Ubuntu version '${distributionVersion}' is unknown to the service downloader, it will be treated as Ubuntu.`);
+                return Runtime.Ubuntu;
             }
-
-            break;
         case 'elementary':
         case 'elementary OS':
             if (distributionVersion.startsWith('0.3')) {
-                // Elementary OS 0.3 Freya is binary compatible with Ubuntu 14.04
-                return Runtime.Ubuntu_14;
+                return Runtime.ElementaryOS_0_3;
             } else if (distributionVersion.startsWith('0.4')) {
-                // Elementary OS 0.4 Loki is binary compatible with Ubuntu 16.04
-                return Runtime.Ubuntu_16;
+                return Runtime.ElementaryOS_0_4;
+            } else {
+                logger.warn(`The ElementaryOS version '${distributionVersion}' is unknown to the service downloader, it will be treated as ElementaryOS.`);
+                return Runtime.ElementaryOS;
             }
-
-            break;
         case 'linuxmint':
-            // Current versions of Linux Mint are binary compatible with Ubuntu 16.04
-            return Runtime.Ubuntu_16;
+            return Runtime.LinuxMint;
         case 'centos':
+            return Runtime.CentOS;
         case 'ol':
-            // Oracle Linux is binary compatible with CentOS
-            return Runtime.CentOS_7;
+            return Runtime.OracleLinux;
         case 'fedora':
-            return Runtime.Fedora_23;
+            return Runtime.Fedora;
         case 'opensuse':
-            return Runtime.OpenSUSE_13_2;
+            return Runtime.OpenSUSE;
         case 'sles':
-            return Runtime.SLES_12_2;
+            return Runtime.SLES;
         case 'rhel':
-            return Runtime.RHEL_7;
+            return Runtime.RHEL;
         case 'debian':
-            return Runtime.Debian_8;
+            return Runtime.Debian;
         case 'galliumos':
-            if (distributionVersion.startsWith('2.0')) {
-                return Runtime.Ubuntu_16;
-            }
-            break;
+            return Runtime.GalliumOS;
         default:
-            // Default to Ubuntu_16 to try to support other Linux distributions
-            return Runtime.Ubuntu_16;
+            return Runtime.Linux;
     }
-
-    return Runtime.Ubuntu_16;
 }
 
 /**
  * Returns a supported .NET Core Runtime ID (RID) for the current platform. The list of Runtime IDs
  * is available at https://github.com/dotnet/corefx/tree/master/pkg/Microsoft.NETCore.Platforms.
  */
-export function getRuntimeId(platform: string, architecture: string, distribution: LinuxDistribution): Runtime {
+export function getRuntimeId(platform: string, architecture: string, distribution: LinuxDistribution, logger: ILogger): Runtime {
     switch (platform) {
         case 'win32':
             switch (architecture) {
@@ -183,7 +195,7 @@ export function getRuntimeId(platform: string, architecture: string, distributio
             if (architecture === 'x86_64') {
 
                 // First try the distribution name
-                let runtimeId = getRuntimeIdLinux(distribution.name, distribution.version);
+                let runtimeId = getRuntimeIdLinux(distribution.name, distribution.version, logger);
 
                 // If the distribution isn't one that we understand, but the 'ID_LIKE' field has something that we understand, use that
                 //
@@ -191,14 +203,14 @@ export function getRuntimeId(platform: string, architecture: string, distributio
                 // how useful ID_LIKE will be since it requires the version numbers to match up, but it is the best we can do.
                 if (runtimeId === Runtime.Unknown && distribution.idLike && distribution.idLike.length > 0) {
                     for (let id of distribution.idLike) {
-                        runtimeId = getRuntimeIdLinux(id, distribution.version);
+                        runtimeId = getRuntimeIdLinux(id, distribution.version, logger);
                         if (runtimeId !== Runtime.Unknown) {
                             break;
                         }
                     }
                 }
 
-                if (runtimeId !== Runtime.Unknown && runtimeId !== Runtime.Unknown) {
+                if (runtimeId !== Runtime.Unknown) {
                     return runtimeId;
                 }
             }
@@ -216,34 +228,85 @@ export function getRuntimeId(platform: string, architecture: string, distributio
 export function getRuntimeDisplayName(runtime: Runtime): string {
     switch (runtime) {
         case Runtime.Windows_64:
-            return 'Windows';
         case Runtime.Windows_86:
+        case Runtime.Windows:
             return 'Windows';
         case Runtime.OSX:
         case Runtime.OSX_ARM64:
             return 'OSX';
-        case Runtime.CentOS_7:
-            return 'Linux';
-        case Runtime.Debian_8:
-            return 'Linux';
-        case Runtime.Fedora_23:
-            return 'Linux';
-        case Runtime.OpenSUSE_13_2:
-            return 'Linux';
-        case Runtime.SLES_12_2:
-            return 'Linux';
-        case Runtime.RHEL_7:
-            return 'Linux';
+        case Runtime.CentOS:
+        case Runtime.Debian:
+        case Runtime.ElementaryOS_0_3:
+        case Runtime.ElementaryOS_0_4:
+        case Runtime.ElementaryOS:
+        case Runtime.Fedora:
+        case Runtime.GalliumOS:
+        case Runtime.LinuxMint:
+        case Runtime.OpenSUSE:
+        case Runtime.OracleLinux:
+        case Runtime.SLES:
+        case Runtime.RHEL:
         case Runtime.Ubuntu_14:
-            return 'Linux';
         case Runtime.Ubuntu_16:
-            return 'Linux';
-        case Runtime.Linux_64:
-            return 'Linux';
-        case Runtime.Linux_86:
+        case Runtime.Ubuntu_18:
+        case Runtime.Ubuntu_20:
+        case Runtime.Ubuntu_22:
+        case Runtime.Ubuntu:
+        case Runtime.Linux:
             return 'Linux';
         default:
-            return 'Unknown';
+            throw new PlatformNotSupportedError(undefined, runtime);
+    }
+}
+
+/**
+ * Get a list of runtimes that can be used when the given runtime is not available.
+ * The fallback runtimes are ordered from more specific to more general. e.g. Ubuntu_16 -> Ubuntu -> Linux.
+ */
+export function getFallbackRuntimes(runtime: Runtime): Runtime[] {
+    switch (runtime) {
+        case Runtime.Windows_64:
+        case Runtime.Windows_86:
+            return [Runtime.Windows];
+        case Runtime.OSX_ARM64:
+            return [Runtime.OSX];
+        case Runtime.ElementaryOS_0_3:
+            // Elementary OS 0.3 Freya is binary compatible with Ubuntu 14.04
+            return [Runtime.Ubuntu_14, ...getFallbackRuntimes(Runtime.Ubuntu_14)];
+        case Runtime.ElementaryOS_0_4:
+            // Elementary OS 0.4 Loki is binary compatible with Ubuntu 16.04
+            return [Runtime.Ubuntu_16, ...getFallbackRuntimes(Runtime.Ubuntu_16)];
+        case Runtime.ElementaryOS:
+            return [Runtime.Linux];
+        case Runtime.GalliumOS:
+            return [Runtime.Ubuntu_16, ...getFallbackRuntimes(Runtime.Ubuntu_16)];
+        case Runtime.LinuxMint:
+            // Current versions of Linux Mint are binary compatible with Ubuntu 16.04
+            return [Runtime.Ubuntu_16, ...getFallbackRuntimes(Runtime.Ubuntu_16)];
+        case Runtime.OracleLinux:
+            // Oracle Linux is binary compatible with CentOS
+            return [Runtime.CentOS, ...getFallbackRuntimes(Runtime.CentOS)];
+        case Runtime.CentOS:
+        case Runtime.Debian:
+        case Runtime.Fedora:
+        case Runtime.OpenSUSE:
+        case Runtime.RHEL:
+        case Runtime.SLES:
+            return [Runtime.Linux];
+        case Runtime.Ubuntu_22:
+        case Runtime.Ubuntu_20:
+        case Runtime.Ubuntu_18:
+        case Runtime.Ubuntu_16:
+        case Runtime.Ubuntu_14:
+            return [Runtime.Ubuntu, ...getFallbackRuntimes(Runtime.Ubuntu)];
+        case Runtime.Ubuntu:
+            return [Runtime.Linux];
+        case Runtime.Windows:
+        case Runtime.OSX:
+        case Runtime.Linux:
+            return [];
+        default:
+            throw new PlatformNotSupportedError(undefined, runtime);
     }
 }
 
@@ -251,11 +314,12 @@ export class PlatformInformation {
     public runtimeId: Runtime;
 
     public constructor(
+        private logger: ILogger,
         public platform: string,
         public architecture: string,
         public distribution: LinuxDistribution = undefined) {
         try {
-            this.runtimeId = getRuntimeId(platform, architecture, distribution);
+            this.runtimeId = getRuntimeId(platform, architecture, distribution, logger);
         } catch (err) {
             this.runtimeId = undefined;
         }
@@ -274,7 +338,7 @@ export class PlatformInformation {
     }
 
     public get isValidRuntime(): boolean {
-        return this.runtimeId !== undefined && this.runtimeId !== Runtime.Unknown && this.runtimeId !== Runtime.Unknown;
+        return this.runtimeId !== undefined && this.runtimeId !== Runtime.Unknown;
     }
 
     public get runtimeDisplayName(): string {
@@ -303,7 +367,7 @@ export class PlatformInformation {
         return result;
     }
 
-    public static getCurrent(): Promise<PlatformInformation> {
+    public static getCurrent(logger: ILogger): Promise<PlatformInformation> {
         let platform = os.platform();
         let architecturePromise: Promise<string>;
         let distributionPromise: Promise<LinuxDistribution>;
@@ -329,7 +393,7 @@ export class PlatformInformation {
         }
 
         return Promise.all([architecturePromise, distributionPromise]).then(rt => {
-            return new PlatformInformation(platform, rt[0], rt[1]);
+            return new PlatformInformation(logger, platform, rt[0], rt[1]);
         });
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "@microsoft/ads-service-downloader",
-  "version": "0.2.5",
+  "version": "1.0.0",
   "description": "Download a file and decompress it. Designed for use with Azure Data Studio",
   "main": "out/main.js",
   "typings": "out/main",

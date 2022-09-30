@@ -96,11 +96,33 @@ export const enum Events {
     /**
      * Install End
      */
-    INSTALL_END = 'install_end'
+    INSTALL_END = 'install_end',
+
+    /**
+     * When log is emitted.
+     * Event arguments:
+     * 1. Log Level
+     * 2. Message
+     */
+    LOG_EMITTED = 'log_emitted'
 }
 
+/**
+ * The list of error codes.
+ */
 export const enum ErrorCodes {
     ERR_PLATFORM_NOT_SUPPORTED,
     ERR_DISTRIBUTION_NOT_SUPPORTED,
     ERR_ARCHITECTURE_NOT_SUPPORTED
+}
+
+/**
+ * The severity level of a log message.
+ */
+export const enum LogLevel {
+    Verbose = 0,
+    Information,
+    Warning,
+    Error,
+    Critical
 }

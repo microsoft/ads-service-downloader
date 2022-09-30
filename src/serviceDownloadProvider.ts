@@ -117,17 +117,16 @@ export class ServiceDownloadProvider {
         const downloadAndInstall: () => Promise<void> = async () => {
             try {
                 pkg.tmpFile = await this.createTempFile(pkg);
-                this.logger.info(`\tdownloading the package: ${pkg.url}`);
-                this.logger.info(`\t                to file: ${pkg.tmpFile.name}`);
+                this.logger.info(`Downloading the package: '${pkg.url}' to file: '${pkg.tmpFile.name}'`);
                 await this.httpClient.downloadFile(pkg.url, pkg, proxy, strictSSL);
-                this.logger.info(`\tinstalling the package from file: ${pkg.tmpFile.name}`);
+                this.logger.info(`Installing the package from file: ${pkg.tmpFile.name}`);
                 await this.install(pkg);
 
             } finally {
                 // remove the downloaded package file
                 if (await existsAsync(pkg.tmpFile.name)) {
                     await unlinkAsync(pkg.tmpFile.name);
-                    this.logger.info(`\tdeleted the package file: ${pkg.tmpFile.name}`);
+                    this.logger.info(`Deleted the package file: ${pkg.tmpFile.name}`);
                 }
             }
         };

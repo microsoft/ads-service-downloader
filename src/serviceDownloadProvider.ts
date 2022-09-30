@@ -150,7 +150,7 @@ export class ServiceDownloadProvider {
     }
 
     private async install(pkg: IPackage): Promise<void> {
-        this.eventEmitter.emit(Events.INSTALL_START, pkg.url);
+        this.eventEmitter.emit(Events.INSTALL_START, pkg.installPath);
         await this.extractor.extract(pkg.tmpFile.name, pkg.installPath);
         this.eventEmitter.emit(Events.INSTALL_END);
     }

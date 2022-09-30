@@ -7,6 +7,7 @@ import * as os from 'os';
 import * as cp from 'child_process';
 import * as fs from 'fs';
 import { PlatformNotSupportedError, ArchitectureNotSupportedError, DistributionNotSupportedError } from './errors';
+import { ILogger } from './logger';
 
 const unknown = 'unknown';
 
@@ -116,7 +117,7 @@ export class LinuxDistribution {
     }
 }
 
-function getRuntimeIdLinux(distributionName: string, distributionVersion: string): Runtime {
+function getRuntimeIdLinux(distributionName: string, distributionVersion: string, logger: ILogger): Runtime {
     switch (distributionName) {
         case 'ubuntu':
             if (distributionVersion.startsWith('14')) {
@@ -130,6 +131,7 @@ function getRuntimeIdLinux(distributionName: string, distributionVersion: string
             } else if (distributionVersion.startsWith('22')) {
                 return Runtime.Ubuntu_22;
             } else {
+                logger.warn(`The Ubuntu version '${distributionVersion}' is unknown to the service downloader, it will be treated as Ubuntu.`);
                 return Runtime.Ubuntu;
             }
         case 'elementary':
@@ -139,6 +141,7 @@ function getRuntimeIdLinux(distributionName: string, distributionVersion: string
             } else if (distributionVersion.startsWith('0.4')) {
                 return Runtime.ElementaryOS_0_4;
             } else {
+                logger.warn(`The ElementaryOS version '${distributionVersion}' is unknown to the service downloader, it will be treated as ElementaryOS.`);
                 return Runtime.ElementaryOS;
             }
         case 'linuxmint':
@@ -168,7 +171,7 @@ function getRuntimeIdLinux(distributionName: string, distributionVersion: string
  * Returns a supported .NET Core Runtime ID (RID) for the current platform. The list of Runtime IDs
  * is available at https://github.com/dotnet/corefx/tree/master/pkg/Microsoft.NETCore.Platforms.
  */
-export function getRuntimeId(platform: string, architecture: string, distribution: LinuxDistribution): Runtime {
+export function getRuntimeId(platform: string, architecture: string, distribution: LinuxDistribution, logger: ILogger): Runtime {
     switch (platform) {
         case 'win32':
             switch (architecture) {
@@ -192,7 +195,7 @@ export function getRuntimeId(platform: string, architecture: string, distributio
             if (architecture === 'x86_64') {
 
                 // First try the distribution name
-                let runtimeId = getRuntimeIdLinux(distribution.name, distribution.version);
+                let runtimeId = getRuntimeIdLinux(distribution.name, distribution.version, logger);
 
                 // If the distribution isn't one that we understand, but the 'ID_LIKE' field has something that we understand, use that
                 //
@@ -200,7 +203,7 @@ export function getRuntimeId(platform: string, architecture: string, distributio
                 // how useful ID_LIKE will be since it requires the version numbers to match up, but it is the best we can do.
                 if (runtimeId === Runtime.Unknown && distribution.idLike && distribution.idLike.length > 0) {
                     for (let id of distribution.idLike) {
-                        runtimeId = getRuntimeIdLinux(id, distribution.version);
+                        runtimeId = getRuntimeIdLinux(id, distribution.version, logger);
                         if (runtimeId !== Runtime.Unknown) {
                             break;
                         }
@@ -257,7 +260,8 @@ export function getRuntimeDisplayName(runtime: Runtime): string {
 }
 
 /**
- * Get the fallback runtimes.
+ * Get a list of runtimes that can be used when the given runtime is not available.
+ * The fallback runtimes are ordered from more specific to more general. e.g. Ubuntu_16 -> Ubuntu -> Linux.
  */
 export function getFallbackRuntimes(runtime: Runtime): Runtime[] {
     switch (runtime) {
@@ -310,11 +314,12 @@ export class PlatformInformation {
     public runtimeId: Runtime;
 
     public constructor(
+        private logger: ILogger,
         public platform: string,
         public architecture: string,
         public distribution: LinuxDistribution = undefined) {
         try {
-            this.runtimeId = getRuntimeId(platform, architecture, distribution);
+            this.runtimeId = getRuntimeId(platform, architecture, distribution, logger);
         } catch (err) {
             this.runtimeId = undefined;
         }
@@ -362,7 +367,7 @@ export class PlatformInformation {
         return result;
     }
 
-    public static getCurrent(): Promise<PlatformInformation> {
+    public static getCurrent(logger: ILogger): Promise<PlatformInformation> {
         let platform = os.platform();
         let architecturePromise: Promise<string>;
         let distributionPromise: Promise<LinuxDistribution>;
@@ -388,7 +393,7 @@ export class PlatformInformation {
         }
 
         return Promise.all([architecturePromise, distributionPromise]).then(rt => {
-            return new PlatformInformation(platform, rt[0], rt[1]);
+            return new PlatformInformation(logger, platform, rt[0], rt[1]);
         });
     }
 

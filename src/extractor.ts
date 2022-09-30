@@ -7,6 +7,7 @@ import * as tar from 'tar';
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import { Events } from './interfaces';
 import { Unzipper } from './zip';
+import { Logger } from './logger';
 
 /**
  * Helper class to handle extracting the contents of an archive
@@ -15,9 +16,10 @@ export class ArchiveExtractor {
 
     public readonly eventEmitter = new EventEmitter({ wildcard: true });
     private unzipper = new Unzipper();
+    private logger = new Logger(this.eventEmitter);
 
     public extract(archivePath: string, targetPath: string): Promise<void> {
-        console.log(archivePath);
+        this.logger.verbose(`Extracting arhive '${archivePath}' to '${targetPath}'.`);
         if (archivePath.match(/\.tar\.gz|\.tar|\.gz$/i)) {
             let entryCount = 0;
             return tar.x(

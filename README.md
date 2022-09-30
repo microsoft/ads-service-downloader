@@ -4,15 +4,15 @@ Download a file and decompresses it. Designed for use with Azure Data Studio.
 
 ## Usage
 
+⚠️IMPORTANT⚠️: The runtime mapping logic has changed significantly in 1.0.0. If upgrading from an earlier version make sure to update your config appropriately.
+
 ### Sample code
-```
+```TypeScript
 const serverdownloader = new ServerProvider(config);
 const executablePath = await serverdownloader.getOrDownloadServer();
 ```
 ### Sample configuration file
-#### NOTE: If you are upgrading from version 0.x.x, make sure to read this section and make sure your mapping information is correctly set.
-
-``` 
+```JSON
 {
 	"downloadUrl": "https://github.com/Microsoft/sqltoolsservice/releases/download/{#version#}/microsoft.sqltools.servicelayer-{#fileName#}",
 	"version": "4.3.0.26",

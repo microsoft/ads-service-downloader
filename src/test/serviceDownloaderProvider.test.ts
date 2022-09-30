@@ -3,6 +3,7 @@
  *  Licensed under the Source EULA. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 import * as assert from 'assert';
+import { Events } from '../interfaces';
 import { Runtime } from '../platform';
 import { ServiceDownloadProvider } from '../serviceDownloadProvider';
 
@@ -19,6 +20,11 @@ describe('ServiceDownloaderProvider tests', () => {
                         }
                 };
                 const provider = new ServiceDownloadProvider(config);
+                provider.eventEmitter.onAny((event, ...args) => {
+                        if (event === Events.LOG_EMITTED) {
+                                console.log(args[1]);
+                        }
+                });
 
                 // scenario: runtime not found test
                 assert.throws(() => { provider.getDownloadFileName(Runtime.CentOS); });

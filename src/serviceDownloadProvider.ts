@@ -11,7 +11,7 @@ import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import * as tmp from 'tmp';
 import * as path from 'path';
 
-import { Runtime, getRuntimeDisplayName, getFallbackRuntime } from './platform';
+import { Runtime, getRuntimeDisplayName, getFallbackRuntimes } from './platform';
 import { IConfig, IPackage, Events, IRetryOptions } from './interfaces';
 import { HttpClient } from './httpClient';
 import { PlatformNotSupportedError, DistributionNotSupportedError } from './errors';
@@ -41,25 +41,32 @@ export class ServiceDownloadProvider {
     }
 
     /**
-     * Returns the download url for given platform
+     * Returns the download url for given runtime
      */
-    public getDownloadFileName(platform: Runtime): string {
+    public getDownloadFileName(runtime: Runtime): string {
         const fileNamesJson = this._config.downloadFileNames;
-        let fileName = fileNamesJson[platform];
-
-        // If the given runtime is not specified in the config, try the fallback runtime.
-        if (fileName === undefined) {
-            const fallback = getFallbackRuntime(platform);
-            fileName = fileNamesJson[fallback];
+        console.log(`Runtimes specified in the configuration file: ${JSON.stringify(fileNamesJson)}`);
+        const runtimesToTry = [runtime, ...getFallbackRuntimes(runtime)];
+        console.log(`Current runtime and the fallback runtimes: ${JSON.stringify(runtimesToTry)}`);
+        let fileName: string | undefined = undefined;
+        for (let i = 0; i < runtimesToTry.length; i++) {
+            const currentRuntime = runtimesToTry[i];
+            console.log(`Checking whether a service file is specified for runtime: '${currentRuntime}'.`);
+            fileName = fileNamesJson[currentRuntime];
+            if (fileName) {
+                console.log(`Found the service file for runtime: '${currentRuntime}'.`);
+                break;
+            } else {
+                console.log(`Service file is not specified for runtime: '${currentRuntime}'.`);
+            }
         }
         if (fileName === undefined) {
             if (process.platform === 'linux') {
-                throw new DistributionNotSupportedError('Unsupported linux distribution', process.platform, platform.toString());
+                throw new DistributionNotSupportedError('Unsupported linux distribution', process.platform, runtime);
             } else {
                 throw new PlatformNotSupportedError(`Unsupported platform: ${process.platform}`, process.platform);
             }
         }
-
         return fileName;
     }
 

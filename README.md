@@ -2,6 +2,58 @@
 
 Download a file and decompresses it. Designed for use with Azure Data Studio.
 
+## Usage
+
+### Sample code
+```
+const serverdownloader = new ServerProvider(config);
+const executablePath = await serverdownloader.getOrDownloadServer();
+```
+### Sample configuration file
+#### NOTE: If you are upgrading from version 0.x.x, make sure to read this section and make sure your mapping information is correctly set.
+
+``` 
+{
+	"downloadUrl": "https://github.com/Microsoft/sqltoolsservice/releases/download/{#version#}/microsoft.sqltools.servicelayer-{#fileName#}",
+	"version": "4.3.0.26",
+	"downloadFileNames": {
+		"Windows_86": "win-x86-net6.0.zip",
+		"Windows_64": "win-x64-net6.0.zip",
+		"OSX": "osx-x64-net6.0.tar.gz",
+		"CentOS": "centos-x64-net6.0.tar.gz",
+		"Ubuntu_16": "ubuntu16-x64-net6.0.tar.gz",
+		"Ubuntu": "ubuntu-x64-net6.0.tar.gz",
+		"Linux": "linux-x64-net6.0.tar.gz",
+	},
+	"installDirectory": "./sqltoolsservice/{#platform#}/{#version#}",
+	"executableFiles": ["MicrosoftSqlToolsServiceLayer.exe", "MicrosoftSqlToolsServiceLayer"],
+	"retry": {
+		"retries": 15,
+		"factor": 2,
+		"minTimeout": 1000,
+		"maxTimeout": 300000,
+		"randomize": false
+	}
+}
+```
+#### Properties
+
+`downloadUrl`: The template of the url to the service file. 2 placeholder variables are supported in this property.
+
+	1. `{#version#}`: The version of the service defined by the `version` property.
+	2. `{#fileName#}`: The matching value of the key-value pair in `downloadFileNames` property.
+
+`version`: The version of the service.
+
+`downloadFileNames`: The mapping between the runtimes (OS + OS Version) and their correspondent service files.
+
+	1. The supported runtimes are defined in the [Runtime enum](https://github.com/microsoft/ads-service-downloader/blob/main/src/platform.ts#L13). 
+	2. A fallback mechanism is available in case the current runtime is not specified in the config, e.g. the current runtime is Ubuntu 22, but it is not defined in the config, the package will also try Ubuntu and Linux until an entry is found. the fallback information is defined in the [fallback function](https://github.com/microsoft/ads-service-downloader/blob/main/src/platform.ts#L262). Follow the guidelines below to simplify the mapping information:
+		a. When possible, define the platform level config, e.g. Linux and set its value to a service file that works for most of Linux distributions.
+		b. Only define the specific runtime if necessary. e.g. Ubuntu 22 requires its own version of service file.
+
+Please file an issue if a specific runtime that requires special handling is not listed in the runtime list.
+
 ## Development
 
 - `yarn install`

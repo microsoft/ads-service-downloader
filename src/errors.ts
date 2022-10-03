@@ -6,28 +6,25 @@
 import { ErrorCodes } from './interfaces';
 
 export class PlatformNotSupportedError extends Error {
-    public static readonly message = '';
     public readonly code: ErrorCodes = ErrorCodes.ERR_PLATFORM_NOT_SUPPORTED;
 
-    constructor(message?: string, public platform?: string) {
-        super(message || PlatformNotSupportedError.message);
+    constructor(platform: string) {
+        super(`The platform '${platform}' is not supported.`);
     }
 }
 
-export class ArchitectureNotSupportedError extends PlatformNotSupportedError {
-    public static readonly message = '';
+export class ArchitectureNotSupportedError extends Error {
     public readonly code: ErrorCodes = ErrorCodes.ERR_ARCHITECTURE_NOT_SUPPORTED;
 
-    constructor(message?: string, platform?: string, public architecture?: string) {
-        super(message || ArchitectureNotSupportedError.message, platform);
+    constructor(platform: string, architecture: string) {
+        super(`The architecture '${architecture}' for platform '${platform}' is not supported.`);
     }
 }
 
-export class DistributionNotSupportedError extends PlatformNotSupportedError {
-    public static readonly message = '';
+export class DistributionNotSupportedError extends Error {
     public readonly code: ErrorCodes = ErrorCodes.ERR_DISTRIBUTION_NOT_SUPPORTED;
 
-    constructor(message?: string, platform?: string, public distribution?: string) {
-        super(message || DistributionNotSupportedError.message, platform);
+    constructor(platform: string, distribution: string, version: string) {
+        super(`The distribution '${distribution}' with version '${version}' for platform '${platform}' is not supported.`);
     }
 }

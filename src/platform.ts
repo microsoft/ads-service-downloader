@@ -163,6 +163,7 @@ function getRuntimeIdLinux(distributionName: string, distributionVersion: string
         case 'galliumos':
             return Runtime.GalliumOS;
         default:
+            logger.warn(`Unknown distribution name: ${distributionName}`);
             return Runtime.Linux;
     }
 }
@@ -178,18 +179,15 @@ export function getRuntimeId(platform: string, architecture: string, distributio
                 case 'x86': return Runtime.Windows_86;
                 case 'x86_64': return Runtime.Windows_64;
                 default:
+                    throw new ArchitectureNotSupportedError(platform, architecture);
             }
-
-            throw new ArchitectureNotSupportedError(`Unsupported Windows architecture: ${architecture}`, platform, architecture);
-
         case 'darwin':
             switch (architecture) {
                 case 'x86_64': return Runtime.OSX;
                 case 'arm64': return Runtime.OSX_ARM64;
                 default:
+                    throw new ArchitectureNotSupportedError(platform, architecture);
             }
-
-            throw new ArchitectureNotSupportedError(`Unsupported macOS architecture: ${architecture}`, platform, architecture);
 
         case 'linux':
             if (architecture === 'x86_64') {
@@ -216,12 +214,11 @@ export function getRuntimeId(platform: string, architecture: string, distributio
             }
 
             // If we got here, this is not a Linux distro or architecture that we currently support.
-            throw new DistributionNotSupportedError(
-                `Unsupported Linux distro: ${distribution.name}, ${distribution.version}, ${architecture}`, platform, distribution.name);
+            throw new DistributionNotSupportedError(platform, distribution.name, distribution.version);
         default:
             // If we got here, we've ended up with a platform we don't support  like 'freebsd' or 'sunos'.
             // Chances are, VS Code doesn't support these platforms either.
-            throw new PlatformNotSupportedError(undefined, platform);
+            throw new PlatformNotSupportedError(platform);
     }
 }
 
@@ -255,7 +252,7 @@ export function getRuntimeDisplayName(runtime: Runtime): string {
         case Runtime.Linux:
             return 'Linux';
         default:
-            throw new PlatformNotSupportedError(undefined, runtime);
+            throw new PlatformNotSupportedError(runtime);
     }
 }
 
@@ -306,7 +303,7 @@ export function getFallbackRuntimes(runtime: Runtime): Runtime[] {
         case Runtime.Linux:
             return [];
         default:
-            throw new PlatformNotSupportedError(undefined, runtime);
+            throw new PlatformNotSupportedError(runtime);
     }
 }
 
@@ -319,8 +316,10 @@ export class PlatformInformation {
         public architecture: string,
         public distribution: LinuxDistribution = undefined) {
         try {
+            logger.verbose(`Getting runtime information. platform: ${platform}, architecture: ${architecture}, distribution: ${distribution}`);
             this.runtimeId = getRuntimeId(platform, architecture, distribution, logger);
         } catch (err) {
+            logger.error(`Failed to get the runtime information. platform: ${platform}, architecture: ${architecture}, distribution: ${distribution}. err: ${err.message}`);
             this.runtimeId = undefined;
         }
     }
@@ -389,7 +388,7 @@ export class PlatformInformation {
                 break;
 
             default:
-                return Promise.reject(new PlatformNotSupportedError(`Unsupported platform: ${platform}`, platform));
+                return Promise.reject(new PlatformNotSupportedError(platform));
         }
 
         return Promise.all([architecturePromise, distributionPromise]).then(rt => {

@@ -67,7 +67,7 @@ export class ServiceDownloadProvider {
             if (process.platform === 'linux') {
                 throw new DistributionNotSupportedError('Unsupported linux distribution', process.platform, runtime);
             } else {
-                throw new PlatformNotSupportedError(`Unsupported platform: ${process.platform}`, process.platform);
+                throw new PlatformNotSupportedError(process.platform);
             }
         }
         return fileName;

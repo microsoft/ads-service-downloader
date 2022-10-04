@@ -7,7 +7,7 @@ import * as os from 'os';
 import * as cp from 'child_process';
 import * as fs from 'fs';
 import { PlatformNotSupportedError, ArchitectureNotSupportedError, DistributionNotSupportedError } from './errors';
-import { ILogger } from './logger';
+import { ConsoleLogger, ILogger } from './logger';
 
 const unknown = 'unknown';
 
@@ -311,7 +311,7 @@ export class PlatformInformation {
     public runtimeId: Runtime;
 
     public constructor(
-        private logger: ILogger,
+        logger: ILogger,
         public platform: string,
         public architecture: string,
         public distribution: LinuxDistribution = undefined) {
@@ -319,7 +319,8 @@ export class PlatformInformation {
             logger.verbose(`Getting runtime information. platform: ${platform}, architecture: ${architecture}, distribution: ${distribution}`);
             this.runtimeId = getRuntimeId(platform, architecture, distribution, logger);
         } catch (err) {
-            logger.error(`Failed to get the runtime information. platform: ${platform}, architecture: ${architecture}, distribution: ${distribution}. err: ${err.message}`);
+            const message = err && err.message ? err.message : err;
+            logger.error(`Failed to get the runtime information. platform: ${platform}, architecture: ${architecture}, distribution: ${distribution}. error message: ${message}`);
             this.runtimeId = undefined;
         }
     }
@@ -366,7 +367,7 @@ export class PlatformInformation {
         return result;
     }
 
-    public static getCurrent(logger: ILogger): Promise<PlatformInformation> {
+    public static getCurrent(logger: ILogger = new ConsoleLogger()): Promise<PlatformInformation> {
         let platform = os.platform();
         let architecturePromise: Promise<string>;
         let distributionPromise: Promise<LinuxDistribution>;

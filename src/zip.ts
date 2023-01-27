@@ -5,7 +5,7 @@
 
 import { open as _openZip, Entry, ZipFile } from 'yauzl';
 import * as path from 'path';
-import * as mkdirp from 'mkdirp';
+import mkdirp from 'mkdirp';
 import { Sequencer } from './async';
 import { Readable } from 'stream';
 import { WriteStream, createWriteStream } from 'fs';

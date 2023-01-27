@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Url, parse as parseUrl } from 'url';
-import * as HttpProxyAgent from 'http-proxy-agent';
-import * as HttpsProxyAgent from 'https-proxy-agent';
+import createHttpProxyAgent from 'http-proxy-agent';
+import createHttpsProxyAgent from 'https-proxy-agent';
 
 function getSystemProxyURL(requestURL: Url): string {
     if (requestURL.protocol === 'http:') {
@@ -42,5 +42,5 @@ export function getProxyAgent(requestURL: Url, proxy?: string, strictSSL?: boole
          rejectUnauthorized: strictSSL
      };
 
-    return requestURL.protocol === 'http:' ? new HttpProxyAgent(opts) : new HttpsProxyAgent(opts);
+    return requestURL.protocol === 'http:' ? createHttpProxyAgent(opts) : createHttpsProxyAgent(opts);
 }

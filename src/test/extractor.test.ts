@@ -3,11 +3,11 @@
  *  Licensed under the Source EULA. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as tmp from 'tmp';
-import * as rimraf from 'rimraf';
+import rimraf from 'rimraf';
 import { ArchiveExtractor } from '../extractor';
 import { promisify } from 'util';
 

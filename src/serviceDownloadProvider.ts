@@ -3,9 +3,7 @@
  *  Licensed under the Source EULA. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-'use strict';
 import * as fs from 'fs';
-import * as tar from 'tar';
 import * as mkdirp from 'mkdirp';
 import { EventEmitter2 as EventEmitter } from 'eventemitter2';
 import * as tmp from 'tmp';
@@ -16,7 +14,7 @@ import { IConfig, IPackage, Events, IRetryOptions, LogLevel } from './interfaces
 import { HttpClient } from './httpClient';
 import { PlatformNotSupportedError, DistributionNotSupportedError } from './errors';
 import { promisify } from 'util';
-import * as asyncRetry from 'async-retry';
+import asyncRetry from 'async-retry';
 import { ArchiveExtractor } from './extractor';
 import { ILogger, Logger } from './logger';
 /*

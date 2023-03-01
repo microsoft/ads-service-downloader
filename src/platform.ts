@@ -419,9 +419,8 @@ export class PlatformInformation {
                     resolve(wmiArch);
                 } else {
                     // sometimes WMIC isn't available on the path so then try to parse the envvar
-                    PlatformInformation.getWindowsArchitectureEnv().then(envArch => {
-                        resolve(envArch);
-                    });
+                    const envArch = PlatformInformation.getWindowsArchitectureEnv();
+                    resolve(envArch);
                 }
             });
         });
@@ -455,7 +454,7 @@ export class PlatformInformation {
             });
     }
 
-    private static async getWindowsArchitectureEnv(): Promise<string> {
+    private static getWindowsArchitectureEnv(): string {
         let arch: string;
         if (process.env.PROCESSOR_ARCHITECTURE === 'ARM64') {
             arch = 'arm64';

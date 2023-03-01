@@ -10,6 +10,7 @@ import { PlatformNotSupportedError, ArchitectureNotSupportedError, DistributionN
 import { ConsoleLogger, ILogger } from './logger';
 
 const unknown = 'unknown';
+const AZDATA_RUNTIME_ENVVAR = 'AZDATA_RUNTIME';
 
 export enum Runtime {
     Unknown = 'Unknown',
@@ -174,6 +175,14 @@ function getRuntimeIdLinux(distributionName: string, distributionVersion: string
  * is available at https://github.com/dotnet/corefx/tree/master/pkg/Microsoft.NETCore.Platforms.
  */
 export function getRuntimeId(platform: string, architecture: string, distribution: LinuxDistribution, logger: ILogger): Runtime {
+    // In the build pipeline, we need the capability to produce builds for runtimes that is different
+    // from the current OS. e.g. produce ARM64 builds on x64 machines.
+    // In order to achieve this, the AZDATA_RUNTIME environment variable is used to override the current runtime information.
+    const runtimeOverride = process.env[AZDATA_RUNTIME_ENVVAR];
+    if (runtimeOverride) {
+        logger.verbose(`AZDATA_RUNTIME environment variable is set, the value '${runtimeOverride}' will be used as the runtime.`);
+        return <Runtime>runtimeOverride;
+    }
     switch (platform) {
         case 'win32':
             switch (architecture) {
@@ -425,8 +434,12 @@ export class PlatformInformation {
                     let archArray: string[] = architecture.split(os.EOL);
                     if (archArray.length >= 2) {
                         let arch = archArray[1].trim();
-
-                        if (arch.toUpperCase().indexOf('ARM')) {
+                        // Output of this command on different os architecture:
+                        //   ARM: ARM 64-bit Processor
+                        //   x64: 64-bit
+                        //   x86: 32-bit
+                        // To take localization into consideration, we only check for the keywords: ARM, 64 and 32.
+                        if (arch.toUpperCase().indexOf('ARM') >= 0) {
                             return 'arm64';
                         } else if (arch.indexOf('64') >= 0) {
                             return 'x86_64';
@@ -442,16 +455,16 @@ export class PlatformInformation {
             });
     }
 
-    private static getWindowsArchitectureEnv(): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            if (process.env.PROCESSOR_ARCHITECTURE === 'ARM64') {
-                resolve('arm64');
-            } else if (process.env.PROCESSOR_ARCHITECTURE === 'x86' && process.env.PROCESSOR_ARCHITEW6432 === undefined) {
-                resolve('x86');
-            } else {
-                resolve('x86_64');
-            }
-        });
+    private static async getWindowsArchitectureEnv(): Promise<string> {
+        let arch: string;
+        if (process.env.PROCESSOR_ARCHITECTURE === 'ARM64') {
+            arch = 'arm64';
+        } else if (process.env.PROCESSOR_ARCHITECTURE === 'x86' && process.env.PROCESSOR_ARCHITEW6432 === undefined) {
+            arch = 'x86';
+        } else {
+            arch = 'x86_64';
+        }
+        return arch;
     }
 
     private static getUnixArchitecture(): Promise<string> {

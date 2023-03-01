@@ -16,6 +16,7 @@ export enum Runtime {
     // Windows
     Windows_86 = 'Windows_86',
     Windows_64 = 'Windows_64',
+    Windows_ARM64 = "Windows_ARM64",
     Windows = 'Windows',
     // macOS
     OSX = 'OSX',
@@ -178,6 +179,7 @@ export function getRuntimeId(platform: string, architecture: string, distributio
             switch (architecture) {
                 case 'x86': return Runtime.Windows_86;
                 case 'x86_64': return Runtime.Windows_64;
+                case 'arm64': return Runtime.Windows_ARM64;
                 default:
                     throw new ArchitectureNotSupportedError(platform, architecture);
             }
@@ -226,6 +228,7 @@ export function getRuntimeDisplayName(runtime: Runtime): string {
     switch (runtime) {
         case Runtime.Windows_64:
         case Runtime.Windows_86:
+        case Runtime.Windows_ARM64:
         case Runtime.Windows:
             return 'Windows';
         case Runtime.OSX:
@@ -264,6 +267,7 @@ export function getFallbackRuntimes(runtime: Runtime): Runtime[] {
     switch (runtime) {
         case Runtime.Windows_64:
         case Runtime.Windows_86:
+        case Runtime.Windows_ARM64:
             return [Runtime.Windows];
         case Runtime.OSX_ARM64:
             return [Runtime.OSX];
@@ -422,8 +426,9 @@ export class PlatformInformation {
                     if (archArray.length >= 2) {
                         let arch = archArray[1].trim();
 
-                        // Note: This string can be localized. So, we'll just check to see if it contains 32 or 64.
-                        if (arch.indexOf('64') >= 0) {
+                        if (arch.toUpperCase().indexOf('ARM')) {
+                            return 'arm64';
+                        } else if (arch.indexOf('64') >= 0) {
                             return 'x86_64';
                         } else if (arch.indexOf('32') >= 0) {
                             return 'x86';
@@ -439,7 +444,9 @@ export class PlatformInformation {
 
     private static getWindowsArchitectureEnv(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            if (process.env.PROCESSOR_ARCHITECTURE === 'x86' && process.env.PROCESSOR_ARCHITEW6432 === undefined) {
+            if (process.env.PROCESSOR_ARCHITECTURE === 'ARM64') {
+                resolve('arm64');
+            } else if (process.env.PROCESSOR_ARCHITECTURE === 'x86' && process.env.PROCESSOR_ARCHITEW6432 === undefined) {
                 resolve('x86');
             } else {
                 resolve('x86_64');

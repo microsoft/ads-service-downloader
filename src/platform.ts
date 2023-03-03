@@ -241,8 +241,9 @@ export function getRuntimeDisplayName(runtime: Runtime): string {
         case Runtime.Windows:
             return 'Windows';
         case Runtime.OSX:
-        case Runtime.OSX_ARM64:
             return 'OSX';
+        case Runtime.OSX_ARM64:
+            return 'OSX_ARM64';
         case Runtime.CentOS:
         case Runtime.Debian:
         case Runtime.ElementaryOS_0_3:

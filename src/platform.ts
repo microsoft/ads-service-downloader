@@ -41,7 +41,8 @@ export enum Runtime {
     Ubuntu_20 = 'Ubuntu_20',
     Ubuntu_22 = 'Ubuntu_22',
     Ubuntu = 'Ubuntu',
-    Linux = 'Linux'
+    Linux = 'Linux',
+    Linux_ARM64 = 'Linux_ARM64'
 }
 
 /**
@@ -222,6 +223,8 @@ export function getRuntimeId(platform: string, architecture: string, distributio
                 if (runtimeId !== Runtime.Unknown) {
                     return runtimeId;
                 }
+            } else if (architecture === 'aarch64') {
+                return Runtime.Linux_ARM64;
             }
 
             // If we got here, this is not a Linux distro or architecture that we currently support.
@@ -263,6 +266,7 @@ export function getRuntimeDisplayName(runtime: Runtime): string {
         case Runtime.Ubuntu_22:
         case Runtime.Ubuntu:
         case Runtime.Linux:
+        case Runtime.Linux_ARM64:
             return 'Linux';
         default:
             throw new PlatformNotSupportedError(runtime);
@@ -315,6 +319,7 @@ export function getFallbackRuntimes(runtime: Runtime): Runtime[] {
         case Runtime.Windows:
         case Runtime.OSX:
         case Runtime.Linux:
+        case Runtime.Linux_ARM64:
             return [];
         default:
             throw new PlatformNotSupportedError(runtime);

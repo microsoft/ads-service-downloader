@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> Azure Data Studio [is retired](https://learn.microsoft.com/en-us/lifecycle/definitions#retirement) as of **February 28, 2026**. You should migrate to [Visual Studio Code](https://code.visualstudio.com/) and the [MSSQL extension](https://learn.microsoft.com/en-us/sql/tools/visual-studio-code-extensions/mssql/mssql-extension-visual-studio-code). For more information, see [What's happening with Azure Data Studio](https://learn.microsoft.com/en-us/sql/tools/whats-happening-azure-data-studio).
+
 # ADS Service Downloader
 
 Download a file and decompresses it. Designed for use with Azure Data Studio.
